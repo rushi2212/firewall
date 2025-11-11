@@ -1,0 +1,13 @@
+{
+  "single_string_example": {
+    "text": "SELECT * FROM users WHERE username = 'admin' --"
+  },
+
+  "multiple_example": {
+    "text": [
+      "SELECT * FROM users;",
+      "Hello, this is a normal message",
+      "? or 1 = 1 --"
+    ]
+  }
+}
