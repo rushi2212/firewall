@@ -1,0 +1,19 @@
+# Combined requirements for FastApi combined application
+# Adjust versions for your environment (Windows + TensorFlow may require specific builds)
+fastapi>=0.70.0
+uvicorn[standard]>=0.17.0
+numpy>=1.21.0
+pydantic>=2.0
+# ML / deep learning
+tensorflow>=2.10.0
+# Classic ML
+joblib
+scikit-learn
+pandas
+# Utilities
+requests
+geoip2
+python-multipart
+
+# Optional, useful when working with model tokenizers
+keras-preprocessing

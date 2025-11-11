@@ -5,7 +5,9 @@ import logging
 from typing import List, Union, Optional, Dict
 
 import numpy as np
-from fastapi import FastAPI, APIRouter, HTTPException, Query
+import hashlib
+import math
+from fastapi import FastAPI, APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 # TensorFlow / Keras may be optional at import time for some endpoints
@@ -28,6 +30,65 @@ logger = logging.getLogger("uvicorn.error")
 app = FastAPI(title="Combined FastAPI Models",
               description="Combined endpoints for BILSTM, Bot Detection, User Behaviour and XSS models",
               version="1.0")
+
+# --- feature-extractor dynamic imports (paths contain a hyphen so import by filepath)
+import importlib.util
+_FEAT_DIR = os.path.join(os.path.dirname(__file__), "feature-extractor")
+
+def _load_feature_funcs():
+    get_geoip = None
+    get_ip_reputation = None
+    tokenize_payload = None
+
+    # geoip_utils.py
+    try:
+        geo_path = os.path.join(_FEAT_DIR, "geoip_utils.py")
+        if os.path.exists(geo_path):
+            spec = importlib.util.spec_from_file_location("feat_geoip", geo_path)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            get_geoip = getattr(mod, "get_geoip", None)
+    except Exception as e:
+        logger.warning(f"Failed to load geoip_utils: {e}")
+
+    # reputation_api.py
+    try:
+        rep_path = os.path.join(_FEAT_DIR, "reputation_api.py")
+        if os.path.exists(rep_path):
+            spec = importlib.util.spec_from_file_location("feat_rep", rep_path)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            get_ip_reputation = getattr(mod, "get_ip_reputation", None)
+    except Exception as e:
+        logger.warning(f"Failed to load reputation_api: {e}")
+
+    # tokenizer/payload_tokenizer.py
+    try:
+        tok_path = os.path.join(_FEAT_DIR, "tokenizer", "payload_tokenizer.py")
+        if os.path.exists(tok_path):
+            spec = importlib.util.spec_from_file_location("feat_tok", tok_path)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            tokenize_payload = getattr(mod, "tokenize_payload", None)
+    except Exception as e:
+        logger.warning(f"Failed to load payload_tokenizer: {e}")
+
+    # Fallbacks
+    if get_geoip is None:
+        def get_geoip(ip):
+            return {"ip": ip, "country": "Unknown", "city": "Unknown", "latitude": None, "longitude": None}
+
+    if get_ip_reputation is None:
+        def get_ip_reputation(ip):
+            return 0
+
+    if tokenize_payload is None:
+        def tokenize_payload(payload: str):
+            return []
+
+    return get_geoip, get_ip_reputation, tokenize_payload
+
+get_geoip, get_ip_reputation, tokenize_payload = _load_feature_funcs()
 
 ############################
 # BILSTM Payload Detector
@@ -467,6 +528,57 @@ app.include_router(bil_router)
 app.include_router(bot_router)
 app.include_router(beh_router)
 app.include_router(xss_router)
+
+############################
+# Feature Extractor (from FastApi/feature-extractor/app.py)
+############################
+feat_router = APIRouter(prefix="/feature", tags=["FeatureExtractor"])
+
+
+@feat_router.post("/extract_features")
+async def extract_features(request: Request):
+    """
+    Extracts tokens, entropy, GeoIP, and IP reputation from incoming payload.
+    """
+    data = await request.json()
+    payload = data.get("payload", "")
+    ip = data.get("ip", "")
+    ua = data.get("ua", "")
+
+    # --- Tokenize payload ---
+    tokens = tokenize_payload(payload)
+
+    # --- Calculate entropy ---
+    def calculate_entropy(s):
+        if not s:
+            return 0.0
+        probabilities = [float(s.count(c)) / len(s) for c in dict.fromkeys(list(s))]
+        entropy = - sum([p * math.log(p, 2) for p in probabilities])
+        return round(entropy, 3)
+
+    entropy = calculate_entropy(payload) if payload else 0.0
+
+    # --- GeoIP Lookup ---
+    geo = get_geoip(ip)
+
+    # --- IP Reputation ---
+    reputation_score = get_ip_reputation(ip)
+
+    # --- Hash the payload for uniqueness ---
+    payload_hash = hashlib.md5(payload.encode()).hexdigest()
+
+    # --- Response ---
+    response = {
+        "payload_hash": payload_hash,
+        "tokens": tokens,
+        "entropy": entropy,
+        "geo": geo,
+        "reputation_score": reputation_score,
+        "user_agent": ua
+    }
+    return response
+
+app.include_router(feat_router)
 
 
 if __name__ == "__main__":
