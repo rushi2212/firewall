@@ -1,0 +1,4 @@
+{
+  "block_threshold": 0.75,
+  "alert_threshold": 0.5
+}
