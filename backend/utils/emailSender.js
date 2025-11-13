@@ -1,6 +1,8 @@
 // emailSender.js
 import nodemailer from "nodemailer";
 import { ENV } from "../config/env.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 export const sendAlertEmail = async (subject, message) => {
   try {
@@ -14,7 +16,7 @@ export const sendAlertEmail = async (subject, message) => {
 
     await transporter.sendMail({
       from: ENV.EMAIL_USER,
-      to: ENV.EMAIL_USER,
+      to: process.env.ALERT_EMAIL_RECIPIENT,
       subject,
       text: message,
     });
