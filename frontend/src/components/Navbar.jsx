@@ -1,10 +1,19 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
   const location = useLocation();
   const { user } = useAuth();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const navItems = [
     { path: "/", label: "Dashboard", icon: "📊" },
@@ -15,78 +24,129 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="glass sticky top-0 z-50 border-b border-white/10">
+    <nav
+      className={`sticky top-0 z-50 transition-all duration-500 ${
+        scrolled
+          ? "bg-slate-900/95 backdrop-blur-xl border-b border-white/20 shadow-2xl shadow-blue-500/10"
+          : "bg-slate-900/80 backdrop-blur-md border-b border-white/10"
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <h1 className="gradient-text text-3xl font-bold flex items-center gap-3 animate-float">
-                <span className="text-4xl animate-glow">🛡️</span>
-                AI-Powered WAF
-              </h1>
+          {/* Logo Section - Enhanced */}
+          <div className="flex items-center group cursor-pointer">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-300"></div>
+              <div className="relative flex items-center gap-3 px-6 py-3 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/10 shadow-lg">
+                <span className="text-4xl filter drop-shadow-lg animate-pulse">
+                  🛡️
+                </span>
+                <div className="flex flex-col">
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    AI-Powered WAF
+                  </h1>
+                  <span className="text-xs text-slate-400 font-medium">
+                    Security Intelligence
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
+          {/* Navigation Items - Redesigned */}
+          <div className="flex items-center gap-2">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`group relative px-6 py-3 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-3 ${
-                    isActive
-                      ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/30 transform scale-105"
-                      : "text-white/80 hover:text-white hover:bg-white/10 hover:shadow-lg hover:shadow-white/10 glass-hover"
-                  }`}
-                >
-                  <span className="text-lg group-hover:animate-bounce">
-                    {item.icon}
-                  </span>
-                  <span className="relative">
-                    {item.label}
-                    {/* Underline animation */}
-                    <span
-                      className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 transition-all duration-300 ${
-                        isActive ? "w-full" : "group-hover:w-full"
+                <Link key={item.path} to={item.path} className="relative group">
+                  <div
+                    className={`relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2.5 overflow-hidden ${
+                      isActive
+                        ? "text-white"
+                        : "text-slate-300 hover:text-white"
+                    }`}
+                  >
+                    {/* Background gradient for active state */}
+                    {isActive && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-100"></div>
+                    )}
+
+                    {/* Hover background */}
+                    {!isActive && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    )}
+
+                    {/* Border glow */}
+                    <div
+                      className={`absolute inset-0 rounded-xl transition-all duration-300 ${
+                        isActive
+                          ? "border-2 border-white/30 shadow-lg shadow-purple-500/50"
+                          : "border border-white/5 group-hover:border-white/20"
                       }`}
-                    ></span>
-                  </span>
+                    ></div>
+
+                    {/* Content */}
+                    <span className="relative text-xl transform group-hover:scale-110 transition-transform duration-300">
+                      {item.icon}
+                    </span>
+                    <span className="relative font-medium tracking-wide">
+                      {item.label}
+                    </span>
+
+                    {/* Active indicator dot */}
+                    {isActive && (
+                      <span className="relative w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                    )}
+                  </div>
                 </Link>
               );
             })}
 
-            {/* Admin Button */}
+            {/* Divider */}
+            <div className="w-px h-8 bg-gradient-to-b from-transparent via-white/20 to-transparent mx-2"></div>
+
+            {/* Admin/Login Button - Enhanced */}
             {user ? (
               <Link
                 to="/admin/dashboard"
-                className={`group relative px-6 py-3 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-3 ${
-                  location.pathname === "/admin/dashboard"
-                    ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30 transform scale-105"
-                    : "bg-gradient-to-r from-amber-600 to-orange-700 text-white hover:from-amber-500 hover:to-orange-600 hover:shadow-lg hover:shadow-amber-500/30 glass-hover"
-                }`}
+                className="relative group overflow-hidden"
               >
-                <span className="text-lg group-hover:animate-bounce">👑</span>
-                <span className="relative">
-                  Admin
-                  <span className="absolute -top-1 -right-2 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
-                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl blur-md opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
+                <div
+                  className={`relative px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2.5 ${
+                    location.pathname === "/admin/dashboard"
+                      ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-xl shadow-amber-500/40 scale-105"
+                      : "bg-gradient-to-r from-amber-600 to-orange-700 text-white group-hover:from-amber-500 group-hover:to-orange-600 group-hover:shadow-xl group-hover:shadow-amber-500/40 group-hover:scale-105"
+                  }`}
+                >
+                  <span className="text-xl transform group-hover:rotate-12 transition-transform duration-300">
+                    👑
+                  </span>
+                  <span className="font-semibold tracking-wide">Admin</span>
+                  <span className="absolute top-1 right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-white/50"></span>
+                  </span>
+                </div>
               </Link>
             ) : (
-              <Link
-                to="/login"
-                className="group relative px-6 py-3 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-400 hover:to-emerald-500 hover:shadow-lg hover:shadow-green-500/30 glass-hover"
-              >
-                <span className="text-lg group-hover:animate-bounce">🔐</span>
-                <span className="relative">
-                  Login
-                  <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 rounded transition-opacity duration-300"></span>
-                </span>
+              <Link to="/login" className="relative group overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl blur-md opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
+                <div className="relative px-6 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-700 text-white group-hover:from-emerald-500 group-hover:to-teal-600 transition-all duration-300 flex items-center gap-2.5 group-hover:shadow-xl group-hover:shadow-emerald-500/40 group-hover:scale-105">
+                  <span className="text-xl transform group-hover:scale-110 transition-transform duration-300">
+                    🔐
+                  </span>
+                  <span className="font-semibold tracking-wide">Login</span>
+                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 rounded-xl transition-colors duration-300"></div>
+                </div>
               </Link>
             )}
           </div>
         </div>
       </div>
+
+      {/* Bottom gradient line */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
     </nav>
   );
 };
