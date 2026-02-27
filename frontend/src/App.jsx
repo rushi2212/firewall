@@ -15,6 +15,7 @@ import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PresentationDashboard from "./pages/PresentationDashboard";
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
                   <Route path="/test" element={<TestPayload />} />
                   <Route path="/alerts" element={<Alerts />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/presentation" element={<PresentationDashboard />} />
 
                   {/* Protected Admin Route */}
                   <Route

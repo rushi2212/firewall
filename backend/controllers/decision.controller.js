@@ -4,17 +4,30 @@ import { calculateThreatScore } from "../utils/scoreCalculator.js";
 import { applyPolicy } from "../utils/policyManager.js";
 import { Log } from "../models/Log.js";
 import { sendAlertEmail } from "../utils/emailSender.js";
+import { publishLogEvent } from "../utils/logStream.js";
+import { computeDdosScore, recordRequest } from "../utils/trafficMonitor.js";
+import { addMemoryLog } from "../utils/memoryLogStore.js";
 
 export const analyzeRequest = async (req, res) => {
   try {
     const { payload, ip, ua } = req.body;
     console.log(req.body);
 
+    const traffic = recordRequest(ip);
+    const ddosScore = computeDdosScore(traffic.rps);
+
     // Step 1: extract features (tokens, entropy, geo, reputation)
-    const featureRes = await axios.post(
-      "http://localhost:8000/feature/extract_features",
-      { payload, ip, ua }
-    );
+    let featureData = {};
+    try {
+      const featureRes = await axios.post(
+        "http://localhost:8000/feature/extract_features",
+        { payload, ip, ua }
+      );
+      featureData = featureRes.data || {};
+    } catch (e) {
+      console.warn("Feature extractor unavailable; using fallbacks");
+      featureData = {};
+    }
 
     // Step 2: call the models that accept the raw payload in parallel
     const calls = [
@@ -94,10 +107,11 @@ export const analyzeRequest = async (req, res) => {
     const results = {
       payload: Number(payloadScore) || 0,
       bot: Number(botScore) || 0,
-      ddos: Number(botScore) || 0,
+      ddos: Number(ddosScore) || 0,
       behavior: Number(behaviorScore) || 0,
       xss: Number(xssScore) || 0,
-      features: featureRes.data || {},
+      features: featureData || {},
+      traffic,
     };
 
     const threatScore = calculateThreatScore(results);
@@ -125,14 +139,28 @@ export const analyzeRequest = async (req, res) => {
     }
 
     // Log to DB
-    const log = await Log.create({
-      ip,
-      payload,
-      prediction: results,
-      threatScore,
-      decision,
-      override: overrideReason,
-    });
+    let log;
+    try {
+      log = await Log.create({
+        ip,
+        payload,
+        prediction: results,
+        threatScore,
+        decision,
+        override: overrideReason,
+      });
+    } catch (e) {
+      log = addMemoryLog({
+        ip,
+        payload,
+        prediction: results,
+        threatScore,
+        decision,
+        override: overrideReason,
+      });
+    }
+
+    publishLogEvent(log);
 
     // If alert/block, notify admin
     if (decision !== "allow") {
