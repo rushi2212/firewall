@@ -19,6 +19,7 @@ const Navbar = () => {
     { path: "/", label: "Dashboard", icon: "📊" },
     { path: "/logs", label: "Logs", icon: "📝" },
     { path: "/test", label: "Test Payload", icon: "🧪" },
+    { path: "/lab", label: "Lab", icon: "🧰" },
     { path: "/alerts", label: "Alerts", icon: "🚨" },
     { path: "/settings", label: "Settings", icon: "⚙️" },
   ];

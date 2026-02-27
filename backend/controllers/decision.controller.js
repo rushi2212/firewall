@@ -7,10 +7,31 @@ import { sendAlertEmail } from "../utils/emailSender.js";
 import { publishLogEvent } from "../utils/logStream.js";
 import { computeDdosScore, recordRequest } from "../utils/trafficMonitor.js";
 import { addMemoryLog } from "../utils/memoryLogStore.js";
+import { ENV } from "../config/env.js";
+
+const fastApiBaseUrl = String(ENV.FASTAPI_URL || "http://localhost:8000").replace(
+  /\/+$/,
+  ""
+);
 
 export const analyzeRequest = async (req, res) => {
   try {
-    const { payload, ip, ua } = req.body;
+    const payload = req.body?.payload;
+    const ua =
+      req.body?.ua ||
+      req.headers["user-agent"] ||
+      req.headers["User-Agent"] ||
+      "";
+
+    const forwardedFor = req.headers["x-forwarded-for"];
+    const headerIp = Array.isArray(forwardedFor)
+      ? forwardedFor[0]
+      : typeof forwardedFor === "string"
+      ? forwardedFor.split(",")[0]
+      : null;
+
+    const ip = req.body?.ip || headerIp || req.ip || "unknown";
+
     console.log(req.body);
 
     const traffic = recordRequest(ip);
@@ -20,7 +41,7 @@ export const analyzeRequest = async (req, res) => {
     let featureData = {};
     try {
       const featureRes = await axios.post(
-        "http://localhost:8000/feature/extract_features",
+        `${fastApiBaseUrl}/feature/extract_features`,
         { payload, ip, ua }
       );
       featureData = featureRes.data || {};
@@ -32,9 +53,9 @@ export const analyzeRequest = async (req, res) => {
     // Step 2: call the models that accept the raw payload in parallel
     const calls = [
       // BILSTM payload detector
-      axios.post("http://localhost:8000/bilstm/predict", { text: payload }),
+      axios.post(`${fastApiBaseUrl}/bilstm/predict`, { text: payload }),
       // XSS detector
-      axios.post("http://localhost:8000/xss/predict", { payload }),
+      axios.post(`${fastApiBaseUrl}/xss/predict`, { payload }),
     ];
 
     // If the incoming request provided a TrafficFlow-like `flow` object, use it
@@ -46,10 +67,10 @@ export const analyzeRequest = async (req, res) => {
       hasFlow = true;
       // supervised and unsupervised bot endpoints expect the same TrafficFlow schema
       calls.push(
-        axios.post("http://localhost:8000/bot/predict/supervised", flow)
+        axios.post(`${fastApiBaseUrl}/bot/predict/supervised`, flow)
       );
       calls.push(
-        axios.post("http://localhost:8000/bot/predict/unsupervised", flow)
+        axios.post(`${fastApiBaseUrl}/bot/predict/unsupervised`, flow)
       );
     }
 
@@ -58,7 +79,7 @@ export const analyzeRequest = async (req, res) => {
     if (req.body.sessions && Array.isArray(req.body.sessions)) {
       hasSessions = true;
       calls.push(
-        axios.post("http://localhost:8000/behaviour/predict", {
+        axios.post(`${fastApiBaseUrl}/behaviour/predict`, {
           sessions: req.body.sessions,
         })
       );

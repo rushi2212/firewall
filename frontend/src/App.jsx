@@ -10,6 +10,10 @@ import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import Logs from "./pages/Logs";
 import TestPayload from "./pages/TestPayload";
+import Lab from "./pages/Lab";
+import LabLoginPortal from "./pages/LabLoginPortal";
+import LabBotDetection from "./pages/LabBotDetection";
+import LabUserBehaviour from "./pages/LabUserBehaviour";
 import Alerts from "./pages/Alerts";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
@@ -35,6 +39,10 @@ function App() {
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/logs" element={<Logs />} />
                   <Route path="/test" element={<TestPayload />} />
+                  <Route path="/lab" element={<Lab />} />
+                  <Route path="/lab/login" element={<LabLoginPortal />} />
+                  <Route path="/lab/bot" element={<LabBotDetection />} />
+                  <Route path="/lab/behaviour" element={<LabUserBehaviour />} />
                   <Route path="/alerts" element={<Alerts />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/presentation" element={<PresentationDashboard />} />

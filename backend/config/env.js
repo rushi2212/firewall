@@ -8,4 +8,5 @@ export const ENV = {
   EMAIL_USER: process.env.EMAIL_USER || "",
   EMAIL_PASS: process.env.EMAIL_PASS || "",
   POLICY_PATH: process.env.POLICY_PATH || "./utils/policy.json",
+  FASTAPI_URL: process.env.FASTAPI_URL || "http://localhost:8000",
 };
