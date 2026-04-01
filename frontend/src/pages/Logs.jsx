@@ -9,7 +9,7 @@ const Logs = () => {
     <div className="space-y-6 animate-fadeIn">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold bg-linear-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
             Request Logs
           </h1>
           <p className="text-gray-400 mt-1">Monitor all incoming requests</p>

@@ -94,7 +94,7 @@ const LabBotDetection = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-6 animate-fadeIn p-4">
       <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
+        <h1 className="text-4xl font-bold bg-linear-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
           Lab: Bot Detection
         </h1>
         <p className="text-gray-400 mt-1">
@@ -125,14 +125,14 @@ const LabBotDetection = () => {
             {!recording ? (
               <button
                 onClick={startRecording}
-                className="bg-gradient-to-r from-primary-600 to-primary-700 text-white py-2 px-4 rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all font-medium shadow-lg"
+                className="bg-linear-to-r from-primary-600 to-primary-700 text-white py-2 px-4 rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all font-medium shadow-lg"
               >
                 ⏺ Start Recording
               </button>
             ) : (
               <button
                 onClick={stopRecording}
-                className="bg-gradient-to-r from-warning-600 to-warning-700 text-white py-2 px-4 rounded-lg hover:from-warning-700 hover:to-warning-800 transition-all font-medium shadow-lg"
+                className="bg-linear-to-r from-warning-600 to-warning-700 text-white py-2 px-4 rounded-lg hover:from-warning-700 hover:to-warning-800 transition-all font-medium shadow-lg"
               >
                 ⏹ Stop Recording
               </button>
@@ -149,7 +149,7 @@ const LabBotDetection = () => {
             <button
               onClick={handleAnalyze}
               disabled={!flow || loading}
-              className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white py-2 px-4 rounded-lg hover:from-emerald-500 hover:to-teal-600 disabled:opacity-50 transition-all font-medium shadow-lg"
+              className="bg-linear-to-r from-emerald-600 to-teal-700 text-white py-2 px-4 rounded-lg hover:from-emerald-500 hover:to-teal-600 disabled:opacity-50 transition-all font-medium shadow-lg"
             >
               {loading ? "Analyzing..." : "🔍 Analyze Flow"}
             </button>

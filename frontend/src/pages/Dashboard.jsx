@@ -90,7 +90,7 @@ const Dashboard = () => {
   return (
     <div className="space-y-8 animate-fadeIn">
       {/* Enhanced Header Section with Actions */}
-      <div className="glass p-8 rounded-3xl border border-white/20 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10">
+      <div className="glass p-8 rounded-3xl border border-white/20 bg-linear-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10">
         <div className="flex justify-between items-center">
           <div className="space-y-3">
             <h1 className="text-6xl font-bold gradient-text animate-float">
@@ -117,7 +117,7 @@ const Dashboard = () => {
           </div>
 
           <div className="flex flex-col gap-4">
-            <div className="glass-hover p-6 rounded-2xl border border-white/10 bg-gradient-to-br from-green-500/20 to-emerald-500/20">
+            <div className="glass-hover p-6 rounded-2xl border border-white/10 bg-linear-to-br from-green-500/20 to-emerald-500/20">
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <span className="w-6 h-6 bg-green-500 rounded-full animate-pulse inline-block shadow-lg shadow-green-500/50"></span>
@@ -148,8 +148,8 @@ const Dashboard = () => {
       {/* Ultra-Enhanced Stats Cards with 3D Effects */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {/* Total Requests Card */}
-        <div className="group relative glass-hover p-8 rounded-3xl border border-white/20 bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 transform hover:scale-110 transition-all duration-700 hover:rotate-1">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
+        <div className="group relative glass-hover p-8 rounded-3xl border border-white/20 bg-linear-to-br from-blue-500/20 via-indigo-500/20 to-purple-500/20 transform hover:scale-110 transition-all duration-700 hover:rotate-1">
+          <div className="absolute inset-0 bg-linear-to-br from-blue-600/10 to-purple-600/10 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
               <div className="space-y-2">
@@ -171,7 +171,7 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="mt-6 h-2 bg-white/20 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 w-full animate-shimmer rounded-full"></div>
+              <div className="h-full bg-linear-to-r from-blue-400 via-indigo-400 to-purple-400 w-full animate-shimmer rounded-full"></div>
             </div>
             <div className="mt-4 text-center">
               <span className="text-blue-300 text-xs font-semibold bg-blue-500/20 px-3 py-1 rounded-full">
@@ -182,8 +182,8 @@ const Dashboard = () => {
         </div>
 
         {/* Blocked Threats Card */}
-        <div className="group relative glass-hover p-8 rounded-3xl border border-white/20 bg-gradient-to-br from-red-500/20 via-rose-500/20 to-pink-500/20 transform hover:scale-110 transition-all duration-700 hover:-rotate-1">
-          <div className="absolute inset-0 bg-gradient-to-br from-red-600/10 to-pink-600/10 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
+        <div className="group relative glass-hover p-8 rounded-3xl border border-white/20 bg-linear-to-br from-red-500/20 via-rose-500/20 to-pink-500/20 transform hover:scale-110 transition-all duration-700 hover:-rotate-1">
+          <div className="absolute inset-0 bg-linear-to-br from-red-600/10 to-pink-600/10 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
               <div className="space-y-2">
@@ -211,7 +211,7 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="mt-6 h-2 bg-white/20 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-red-400 via-rose-400 to-pink-400 w-full animate-shimmer rounded-full"></div>
+              <div className="h-full bg-linear-to-r from-red-400 via-rose-400 to-pink-400 w-full animate-shimmer rounded-full"></div>
             </div>
             <div className="mt-4 text-center">
               <span className="text-red-300 text-xs font-semibold bg-red-500/20 px-3 py-1 rounded-full">
@@ -222,8 +222,8 @@ const Dashboard = () => {
         </div>
 
         {/* Alerts Generated Card */}
-        <div className="group relative glass-hover p-8 rounded-3xl border border-white/20 bg-gradient-to-br from-yellow-500/20 via-orange-500/20 to-amber-500/20 transform hover:scale-110 transition-all duration-700 hover:rotate-1">
-          <div className="absolute inset-0 bg-gradient-to-br from-yellow-600/10 to-orange-600/10 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
+        <div className="group relative glass-hover p-8 rounded-3xl border border-white/20 bg-linear-to-br from-yellow-500/20 via-orange-500/20 to-amber-500/20 transform hover:scale-110 transition-all duration-700 hover:rotate-1">
+          <div className="absolute inset-0 bg-linear-to-br from-yellow-600/10 to-orange-600/10 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
               <div className="space-y-2">
@@ -243,7 +243,7 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="mt-6 h-2 bg-white/20 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-yellow-400 via-orange-400 to-amber-400 w-full animate-shimmer rounded-full"></div>
+              <div className="h-full bg-linear-to-r from-yellow-400 via-orange-400 to-amber-400 w-full animate-shimmer rounded-full"></div>
             </div>
             <div className="mt-4 text-center">
               <span className="text-yellow-300 text-xs font-semibold bg-yellow-500/20 px-3 py-1 rounded-full">
@@ -254,8 +254,8 @@ const Dashboard = () => {
         </div>
 
         {/* Allowed Requests Card */}
-        <div className="group relative glass-hover p-8 rounded-3xl border border-white/20 bg-gradient-to-br from-green-500/20 via-emerald-500/20 to-teal-500/20 transform hover:scale-110 transition-all duration-700 hover:-rotate-1">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-600/10 to-teal-600/10 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
+        <div className="group relative glass-hover p-8 rounded-3xl border border-white/20 bg-linear-to-br from-green-500/20 via-emerald-500/20 to-teal-500/20 transform hover:scale-110 transition-all duration-700 hover:-rotate-1">
+          <div className="absolute inset-0 bg-linear-to-br from-green-600/10 to-teal-600/10 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
               <div className="space-y-2">
@@ -275,7 +275,7 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="mt-6 h-2 bg-white/20 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 w-full animate-shimmer rounded-full"></div>
+              <div className="h-full bg-linear-to-r from-green-400 via-emerald-400 to-teal-400 w-full animate-shimmer rounded-full"></div>
             </div>
             <div className="mt-4 text-center">
               <span className="text-green-300 text-xs font-semibold bg-green-500/20 px-3 py-1 rounded-full">
@@ -288,9 +288,9 @@ const Dashboard = () => {
 
       {/* Enhanced Charts with Better Styling */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        <div className="glass-hover p-8 rounded-3xl border border-white/20 bg-gradient-to-br from-purple-500/10 to-pink-500/10 transform hover:scale-[1.03] transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/20">
+        <div className="glass-hover p-8 rounded-3xl border border-white/20 bg-linear-to-br from-purple-500/10 to-pink-500/10 transform hover:scale-[1.03] transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/20">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-4 h-4 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>
+            <div className="w-4 h-4 bg-linear-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>
             <h3 className="text-2xl font-bold text-white">
               Security Decision Distribution
             </h3>
@@ -304,9 +304,9 @@ const Dashboard = () => {
           />
         </div>
 
-        <div className="glass-hover p-8 rounded-3xl border border-white/20 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 transform hover:scale-[1.03] transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/20">
+        <div className="glass-hover p-8 rounded-3xl border border-white/20 bg-linear-to-br from-blue-500/10 to-cyan-500/10 transform hover:scale-[1.03] transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/20">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-4 h-4 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full animate-pulse"></div>
+            <div className="w-4 h-4 bg-linear-to-r from-blue-400 to-cyan-400 rounded-full animate-pulse"></div>
             <h3 className="text-2xl font-bold text-white">
               Threat Score Timeline
             </h3>
@@ -323,7 +323,7 @@ const Dashboard = () => {
       </div>
 
       {/* Enhanced Real-time Activity Feed */}
-      <div className="glass p-8 rounded-3xl border border-white/20 bg-gradient-to-r from-slate-500/10 to-gray-500/10">
+      <div className="glass p-8 rounded-3xl border border-white/20 bg-linear-to-r from-slate-500/10 to-gray-500/10">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <div className="text-4xl animate-pulse">📡</div>
@@ -370,7 +370,7 @@ const Dashboard = () => {
               return (
                 <div
                   key={idx}
-                  className="group flex items-center gap-6 p-6 glass-hover rounded-2xl border border-white/10 bg-gradient-to-r from-white/5 to-transparent hover:from-white/10 transition-all duration-300"
+                  className="group flex items-center gap-6 p-6 glass-hover rounded-2xl border border-white/10 bg-linear-to-r from-white/5 to-transparent hover:from-white/10 transition-all duration-300"
                 >
                   <div className="relative">
                     <div
@@ -438,7 +438,7 @@ const Dashboard = () => {
 
       {/* Security Performance Matrix */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="glass p-8 rounded-3xl border border-white/20 bg-gradient-to-br from-indigo-500/10 to-purple-500/10">
+        <div className="glass p-8 rounded-3xl border border-white/20 bg-linear-to-br from-indigo-500/10 to-purple-500/10">
           <div className="flex items-center gap-3 mb-6">
             <div className="text-3xl">🎯</div>
             <h3 className="text-2xl font-bold text-white">
@@ -598,7 +598,7 @@ const Dashboard = () => {
         </div>
 
         {/* Threat Analysis Heatmap */}
-        <div className="glass p-8 rounded-3xl border border-white/20 bg-gradient-to-br from-red-500/10 to-orange-500/10">
+        <div className="glass p-8 rounded-3xl border border-white/20 bg-linear-to-br from-red-500/10 to-orange-500/10">
           <div className="flex items-center gap-3 mb-6">
             <div className="text-3xl">🔥</div>
             <h3 className="text-2xl font-bold text-white">
@@ -656,7 +656,7 @@ const Dashboard = () => {
       </div>
 
       {/* Network Topology Visualization */}
-      <div className="glass p-8 rounded-3xl border border-white/20 bg-gradient-to-br from-cyan-500/10 to-blue-500/10">
+      <div className="glass p-8 rounded-3xl border border-white/20 bg-linear-to-br from-cyan-500/10 to-blue-500/10">
         <div className="flex items-center gap-3 mb-6">
           <div className="text-3xl">🌐</div>
           <h3 className="text-2xl font-bold text-white">
@@ -668,7 +668,7 @@ const Dashboard = () => {
           {/* Network Nodes */}
           <div className="absolute top-1/2 left-1/4 transform -translate-x-1/2 -translate-y-1/2">
             <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold border-4 border-white/20 animate-pulse">
+              <div className="w-16 h-16 bg-linear-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold border-4 border-white/20 animate-pulse">
                 WAF
               </div>
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full animate-ping"></div>
@@ -676,19 +676,19 @@ const Dashboard = () => {
           </div>
 
           <div className="absolute top-1/4 right-1/4 transform translate-x-1/2">
-            <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white/20">
+            <div className="w-12 h-12 bg-linear-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white/20">
               APP
             </div>
           </div>
 
           <div className="absolute bottom-1/4 right-1/4 transform translate-x-1/2">
-            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white/20">
+            <div className="w-12 h-12 bg-linear-to-r from-purple-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white/20">
               DB
             </div>
           </div>
 
           <div className="absolute top-1/2 left-12 transform -translate-y-1/2">
-            <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white/20 animate-pulse">
+            <div className="w-10 h-10 bg-linear-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white/20 animate-pulse">
               USER
             </div>
           </div>
@@ -767,7 +767,7 @@ const Dashboard = () => {
       {/* System Health Dashboard */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* CPU Usage */}
-        <div className="glass p-6 rounded-2xl border border-white/10 bg-gradient-to-br from-green-500/10 to-emerald-500/10">
+        <div className="glass p-6 rounded-2xl border border-white/10 bg-linear-to-br from-green-500/10 to-emerald-500/10">
           <div className="flex items-center gap-3 mb-4">
             <div className="text-2xl">⚡</div>
             <h4 className="text-lg font-semibold text-white">CPU Usage</h4>
@@ -775,7 +775,7 @@ const Dashboard = () => {
 
           <div className="relative">
             <div className="w-full bg-white/20 rounded-full h-6 mb-2">
-              <div className="bg-gradient-to-r from-green-400 to-emerald-500 h-6 rounded-full w-[65%] animate-pulse flex items-center justify-end pr-2">
+              <div className="bg-linear-to-r from-green-400 to-emerald-500 h-6 rounded-full w-[65%] animate-pulse flex items-center justify-end pr-2">
                 <span className="text-white text-xs font-bold">65%</span>
               </div>
             </div>
@@ -791,7 +791,7 @@ const Dashboard = () => {
               <div key={idx} className="text-center">
                 <div className="h-12 bg-white/20 rounded relative overflow-hidden">
                   <div
-                    className="bg-gradient-to-t from-green-500 to-emerald-400 absolute bottom-0 w-full rounded animate-pulse"
+                    className="bg-linear-to-t from-green-500 to-emerald-400 absolute bottom-0 w-full rounded animate-pulse"
                     style={{
                       height: `${usage}%`,
                       animationDelay: `${idx * 0.2}s`,
@@ -805,7 +805,7 @@ const Dashboard = () => {
         </div>
 
         {/* Memory Usage */}
-        <div className="glass p-6 rounded-2xl border border-white/10 bg-gradient-to-br from-blue-500/10 to-cyan-500/10">
+        <div className="glass p-6 rounded-2xl border border-white/10 bg-linear-to-br from-blue-500/10 to-cyan-500/10">
           <div className="flex items-center gap-3 mb-4">
             <div className="text-2xl">🧠</div>
             <h4 className="text-lg font-semibold text-white">Memory Usage</h4>
@@ -864,7 +864,7 @@ const Dashboard = () => {
         </div>
 
         {/* Network Traffic */}
-        <div className="glass p-6 rounded-2xl border border-white/10 bg-gradient-to-br from-purple-500/10 to-indigo-500/10">
+        <div className="glass p-6 rounded-2xl border border-white/10 bg-linear-to-br from-purple-500/10 to-indigo-500/10">
           <div className="flex items-center gap-3 mb-4">
             <div className="text-2xl">📡</div>
             <h4 className="text-lg font-semibold text-white">
@@ -880,7 +880,7 @@ const Dashboard = () => {
                 <span className="text-green-400 font-semibold">↓ 124 MB/s</span>
               </div>
               <div className="w-full bg-white/20 rounded-full h-2">
-                <div className="bg-gradient-to-r from-green-400 to-emerald-500 h-2 rounded-full w-[78%] animate-pulse"></div>
+                <div className="bg-linear-to-r from-green-400 to-emerald-500 h-2 rounded-full w-[78%] animate-pulse"></div>
               </div>
             </div>
 
@@ -891,7 +891,7 @@ const Dashboard = () => {
                 <span className="text-blue-400 font-semibold">↑ 89 MB/s</span>
               </div>
               <div className="w-full bg-white/20 rounded-full h-2">
-                <div className="bg-gradient-to-r from-blue-400 to-cyan-500 h-2 rounded-full w-[56%] animate-pulse"></div>
+                <div className="bg-linear-to-r from-blue-400 to-cyan-500 h-2 rounded-full w-[56%] animate-pulse"></div>
               </div>
             </div>
 
@@ -902,7 +902,7 @@ const Dashboard = () => {
                 <span className="text-red-400 font-semibold">🚫 15 MB/s</span>
               </div>
               <div className="w-full bg-white/20 rounded-full h-2">
-                <div className="bg-gradient-to-r from-red-400 to-rose-500 h-2 rounded-full w-[12%] animate-pulse"></div>
+                <div className="bg-linear-to-r from-red-400 to-rose-500 h-2 rounded-full w-[12%] animate-pulse"></div>
               </div>
             </div>
           </div>
@@ -913,7 +913,7 @@ const Dashboard = () => {
               {[45, 62, 38, 71, 55, 83, 49, 67, 41, 78].map((height, idx) => (
                 <div
                   key={idx}
-                  className="w-2 bg-gradient-to-t from-purple-500 to-indigo-400 rounded-sm animate-pulse"
+                  className="w-2 bg-linear-to-t from-purple-500 to-indigo-400 rounded-sm animate-pulse"
                   style={{
                     height: `${height / 2}px`,
                     animationDelay: `${idx * 0.1}s`,

@@ -23,6 +23,10 @@ export const analyzeRequest = async (req, res) => {
       req.headers["User-Agent"] ||
       "";
 
+    const method = req.body?.method || req.method;
+    const path = req.body?.path || req.originalUrl || req.path;
+    const referer = req.body?.referer || req.headers?.referer || req.headers?.referrer || "";
+
     const forwardedFor = req.headers["x-forwarded-for"];
     const headerIp = Array.isArray(forwardedFor)
       ? forwardedFor[0]
@@ -164,6 +168,10 @@ export const analyzeRequest = async (req, res) => {
     try {
       log = await Log.create({
         ip,
+        method,
+        path,
+        ua,
+        referer,
         payload,
         prediction: results,
         threatScore,
@@ -173,6 +181,10 @@ export const analyzeRequest = async (req, res) => {
     } catch (e) {
       log = addMemoryLog({
         ip,
+        method,
+        path,
+        ua,
+        referer,
         payload,
         prediction: results,
         threatScore,

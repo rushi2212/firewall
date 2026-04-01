@@ -44,4 +44,8 @@ export const alertsAPI = {
   test: () => api.post("/alerts/test"),
 };
 
+export const reportsAPI = {
+  getRequests: (params) => api.get("/reports/requests", { params }),
+};
+
 export default api;

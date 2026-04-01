@@ -4,6 +4,7 @@ import cors from "cors";
 import decisionRoutes from "./routes/decision.routes.js";
 import logsRoutes from "./routes/logs.routes.js";
 import alertsRoutes from "./routes/alerts.routes.js";
+import reportsRoutes from "./routes/reports.routes.js";
 import path from "path"; // Import path module
 import { fileURLToPath } from "url"; // Needed for ES module compatibility
 const __filename = fileURLToPath(import.meta.url);
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use("/api/decision", decisionRoutes);
 app.use("/api/logs", logsRoutes);
 app.use("/api/alerts", alertsRoutes);
+app.use("/api/reports", reportsRoutes);
 
 app.use(express.static(path.join(__dirname, "../frontend", "dist")));
 app.get("*", (req, res) => {

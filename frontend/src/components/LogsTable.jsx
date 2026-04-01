@@ -36,21 +36,21 @@ const LogsTable = ({ logs, loading }) => {
   const getDecisionBadge = (decision) => {
     const badges = {
       allow:
-        "bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border border-green-500/30 shadow-lg shadow-green-500/20",
+        "bg-linear-to-r from-green-500/20 to-emerald-500/20 text-green-300 border border-green-500/30 shadow-lg shadow-green-500/20",
       alert:
-        "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-300 border border-yellow-500/30 shadow-lg shadow-yellow-500/20",
+        "bg-linear-to-r from-yellow-500/20 to-orange-500/20 text-yellow-300 border border-yellow-500/30 shadow-lg shadow-yellow-500/20",
       block:
-        "bg-gradient-to-r from-red-500/20 to-rose-500/20 text-red-300 border border-red-500/30 shadow-lg shadow-red-500/20",
+        "bg-linear-to-r from-red-500/20 to-rose-500/20 text-red-300 border border-red-500/30 shadow-lg shadow-red-500/20",
       blocked:
-        "bg-gradient-to-r from-red-500/20 to-rose-500/20 text-red-300 border border-red-500/30 shadow-lg shadow-red-500/20",
+        "bg-linear-to-r from-red-500/20 to-rose-500/20 text-red-300 border border-red-500/30 shadow-lg shadow-red-500/20",
       allowed:
-        "bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border border-green-500/30 shadow-lg shadow-green-500/20",
+        "bg-linear-to-r from-green-500/20 to-emerald-500/20 text-green-300 border border-green-500/30 shadow-lg shadow-green-500/20",
       alerted:
-        "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-300 border border-yellow-500/30 shadow-lg shadow-yellow-500/20",
+        "bg-linear-to-r from-yellow-500/20 to-orange-500/20 text-yellow-300 border border-yellow-500/30 shadow-lg shadow-yellow-500/20",
     };
     return (
       badges[decision?.toLowerCase()] ||
-      "bg-gradient-to-r from-gray-500/20 to-slate-500/20 text-gray-300 border border-gray-500/30"
+      "bg-linear-to-r from-gray-500/20 to-slate-500/20 text-gray-300 border border-gray-500/30"
     );
   };
 
@@ -100,7 +100,7 @@ const LogsTable = ({ logs, loading }) => {
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Enhanced Header with Stats */}
-      <div className="glass p-6 rounded-3xl border border-white/20 bg-gradient-to-r from-slate-500/10 to-gray-500/10">
+      <div className="glass p-6 rounded-3xl border border-white/20 bg-linear-to-r from-slate-500/10 to-gray-500/10">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <div className="text-4xl animate-pulse">📊</div>
@@ -176,7 +176,7 @@ const LogsTable = ({ logs, loading }) => {
                 onClick={() => setFilter(key)}
                 className={`group flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   filter === key
-                    ? `bg-gradient-to-r from-${color}-500 to-${color}-600 text-white shadow-lg shadow-${color}-500/30 scale-105`
+                    ? `bg-linear-to-r from-${color}-500 to-${color}-600 text-white shadow-lg shadow-${color}-500/30 scale-105`
                     : "glass-hover text-white/80 border border-white/20 hover:border-white/40"
                 }`}
               >
@@ -219,7 +219,7 @@ const LogsTable = ({ logs, loading }) => {
       <div className="glass rounded-3xl border border-white/20 overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
           <table className="min-w-full">
-            <thead className="bg-gradient-to-r from-slate-800/80 to-gray-800/80 border-b border-white/10">
+            <thead className="bg-linear-to-r from-slate-800/80 to-gray-800/80 border-b border-white/10">
               <tr>
                 {[
                   { key: "timestamp", label: "Timestamp", icon: "🕐" },
@@ -445,7 +445,7 @@ const LogsTable = ({ logs, loading }) => {
 
         {/* Pagination Footer */}
         {filteredLogs.length > 0 && (
-          <div className="glass p-4 border-t border-white/10 bg-gradient-to-r from-slate-800/50 to-gray-800/50">
+          <div className="glass p-4 border-t border-white/10 bg-linear-to-r from-slate-800/50 to-gray-800/50">
             <div className="flex items-center justify-between">
               <div className="text-sm text-white/70">
                 Showing {filteredLogs.length} of {logs.length} security events

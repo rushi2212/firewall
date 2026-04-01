@@ -33,17 +33,25 @@ const Navbar = () => {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div
+          className={`flex items-center justify-between transition-all duration-500 ${
+            scrolled ? "h-16" : "h-20"
+          }`}
+        >
           {/* Logo Section - Enhanced */}
-          <div className="flex items-center group cursor-pointer">
+          <Link
+            to="/"
+            className="flex items-center group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded-2xl"
+            aria-label="Go to Dashboard"
+          >
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-300"></div>
-              <div className="relative flex items-center gap-3 px-6 py-3 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/10 shadow-lg">
-                <span className="text-4xl filter drop-shadow-lg animate-pulse">
+              <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-purple-600 rounded-2xl blur-xl opacity-35 group-hover:opacity-55 transition-opacity duration-300"></div>
+              <div className="relative flex items-center gap-3 px-6 py-3 bg-linear-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/10 shadow-lg group-hover:border-white/15 transition-all">
+                <span className="text-4xl filter drop-shadow-lg">
                   🛡️
                 </span>
-                <div className="flex flex-col">
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                <div className="flex flex-col leading-tight">
+                  <h1 className="text-2xl font-bold bg-linear-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                     AI-Powered WAF
                   </h1>
                   <span className="text-xs text-slate-400 font-medium">
@@ -52,16 +60,22 @@ const Navbar = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* Navigation Items - Redesigned */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1 justify-end overflow-x-auto no-scrollbar -mx-2 px-2">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
-                <Link key={item.path} to={item.path} className="relative group">
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded-xl"
+                  aria-label={item.label}
+                  aria-current={isActive ? "page" : undefined}
+                >
                   <div
-                    className={`relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2.5 overflow-hidden ${
+                    className={`relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2.5 overflow-hidden active:scale-[0.98] ${
                       isActive
                         ? "text-white"
                         : "text-slate-300 hover:text-white"
@@ -69,12 +83,12 @@ const Navbar = () => {
                   >
                     {/* Background gradient for active state */}
                     {isActive && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-100"></div>
+                      <div className="absolute inset-0 bg-linear-to-r from-blue-500 via-purple-500 to-pink-500 opacity-100"></div>
                     )}
 
                     {/* Hover background */}
                     {!isActive && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="absolute inset-0 bg-linear-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     )}
 
                     {/* Border glow */}
@@ -104,36 +118,37 @@ const Navbar = () => {
             })}
 
             {/* Divider */}
-            <div className="w-px h-8 bg-gradient-to-b from-transparent via-white/20 to-transparent mx-2"></div>
+            <div className="w-px h-8 bg-linear-to-b from-transparent via-white/20 to-transparent mx-2"></div>
 
             {/* Admin/Login Button - Enhanced */}
             {user ? (
               <Link
                 to="/admin/dashboard"
-                className="relative group overflow-hidden"
+                className="relative group overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded-xl"
+                aria-label="Admin Dashboard"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl blur-md opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-linear-to-r from-amber-500 to-orange-600 rounded-xl blur-md opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
                 <div
-                  className={`relative px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2.5 ${
+                  className={`relative px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2.5 active:scale-[0.98] ${
                     location.pathname === "/admin/dashboard"
-                      ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-xl shadow-amber-500/40 scale-105"
-                      : "bg-gradient-to-r from-amber-600 to-orange-700 text-white group-hover:from-amber-500 group-hover:to-orange-600 group-hover:shadow-xl group-hover:shadow-amber-500/40 group-hover:scale-105"
+                      ? "bg-linear-to-r from-amber-500 to-orange-600 text-white shadow-xl shadow-amber-500/40 scale-105"
+                      : "bg-linear-to-r from-amber-600 to-orange-700 text-white group-hover:from-amber-500 group-hover:to-orange-600 group-hover:shadow-xl group-hover:shadow-amber-500/40 group-hover:scale-105"
                   }`}
                 >
                   <span className="text-xl transform group-hover:rotate-12 transition-transform duration-300">
                     👑
                   </span>
                   <span className="font-semibold tracking-wide">Admin</span>
-                  <span className="absolute top-1 right-1 flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-white/50"></span>
-                  </span>
                 </div>
               </Link>
             ) : (
-              <Link to="/login" className="relative group overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl blur-md opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
-                <div className="relative px-6 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-700 text-white group-hover:from-emerald-500 group-hover:to-teal-600 transition-all duration-300 flex items-center gap-2.5 group-hover:shadow-xl group-hover:shadow-emerald-500/40 group-hover:scale-105">
+              <Link
+                to="/login"
+                className="relative group overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded-xl"
+                aria-label="Login"
+              >
+                <div className="absolute inset-0 bg-linear-to-r from-emerald-500 to-teal-600 rounded-xl blur-md opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
+                <div className="relative px-6 py-2.5 rounded-xl text-sm font-bold bg-linear-to-r from-emerald-600 to-teal-700 text-white group-hover:from-emerald-500 group-hover:to-teal-600 transition-all duration-300 flex items-center gap-2.5 group-hover:shadow-xl group-hover:shadow-emerald-500/40 group-hover:scale-105">
                   <span className="text-xl transform group-hover:scale-110 transition-transform duration-300">
                     🔐
                   </span>
@@ -147,7 +162,7 @@ const Navbar = () => {
       </div>
 
       {/* Bottom gradient line */}
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-purple-500/50 to-transparent"></div>
     </nav>
   );
 };
