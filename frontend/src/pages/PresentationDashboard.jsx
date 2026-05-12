@@ -94,22 +94,22 @@ const PresentationDashboard = () => {
     <div className="space-y-6 animate-fadeIn">
       <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-4xl font-bold bg-linear-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-[var(--app-text)]">
             Presentation Dashboard
           </h1>
-          <p className="text-gray-400 mt-1">
+          <p className="text-muted mt-1">
             Live detection view (SSE stream)
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div
-            className={`px-4 py-2 rounded-xl border text-sm font-semibold backdrop-blur-sm ${
+            className={`px-4 py-2 rounded-xl border text-sm font-semibold ${
               streamStatus === "connected"
-                ? "border-success-600/50 bg-success-900/30 text-success-200"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200"
                 : streamStatus === "connecting"
-                ? "border-warning-600/50 bg-warning-900/30 text-warning-200"
-                : "border-danger-600/50 bg-danger-900/30 text-danger-200"
+                ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200"
+                : "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-900/30 dark:text-rose-200"
             }`}
           >
             {streamStatus === "connected"
@@ -121,7 +121,7 @@ const PresentationDashboard = () => {
 
           <button
             onClick={fetchInitial}
-            className="px-4 py-2 rounded-xl bg-gray-800/60 border border-gray-700 text-gray-200 hover:bg-gray-800 transition-all"
+            className="btn btn-primary"
           >
             Refresh
           </button>
@@ -142,36 +142,36 @@ const PresentationDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-2xl overflow-hidden border border-gray-700">
-          <div className="p-6 bg-gray-900/60 border-b border-gray-700 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+        <div className="panel overflow-hidden">
+          <div className="panel-header">
+            <h2 className="text-lg font-semibold text-[var(--app-text)] flex items-center gap-2">
               <span className="text-2xl">📡</span> Live Feed
             </h2>
-            <div className="text-sm text-gray-300">
+            <div className="text-sm text-muted">
               Latest RPS: {latestRps !== undefined ? latestRps.toFixed(2) : "—"}
             </div>
           </div>
 
-          <div className="divide-y divide-gray-700 max-h-[520px] overflow-auto">
+          <div className="divide-y divide-[var(--app-border)] max-h-[520px] overflow-auto">
             {logs.length === 0 ? (
-              <div className="p-6 text-gray-400">No logs yet.</div>
+              <div className="p-6 text-muted">No logs yet.</div>
             ) : (
               logs.slice(0, 50).map((log) => {
                 const isActive = selected?._id === log?._id;
                 const decision = (log?.decision || "").toLowerCase();
                 const badgeClass =
                   decision === "block"
-                    ? "bg-danger-900/40 text-danger-200 border-danger-700/50"
+                    ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-200 dark:border-rose-700"
                     : decision === "alert"
-                    ? "bg-warning-900/40 text-warning-200 border-warning-700/50"
-                    : "bg-success-900/30 text-success-200 border-success-700/50";
+                    ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-700"
+                    : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:border-emerald-700";
 
                 return (
                   <button
                     key={log?._id}
                     onClick={() => setSelected(log)}
-                    className={`w-full text-left p-4 hover:bg-gray-800/40 transition-colors ${
-                      isActive ? "bg-gray-800/50" : "bg-transparent"
+                    className={`w-full text-left p-4 hover:bg-[var(--app-surface-muted)] transition-colors ${
+                      isActive ? "bg-[var(--app-surface-muted)]" : "bg-transparent"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-4">
@@ -182,20 +182,20 @@ const PresentationDashboard = () => {
                           >
                             {decision || "—"}
                           </span>
-                          <span className="text-gray-200 font-semibold truncate">
+                          <span className="text-[var(--app-text)] font-semibold truncate">
                             {log?.ip || "Unknown IP"}
                           </span>
                         </div>
-                        <div className="text-gray-400 text-sm mt-1 truncate">
+                        <div className="text-muted text-sm mt-1 truncate">
                           {log?.payload || "(no payload)"}
                         </div>
                       </div>
 
                       <div className="text-right shrink-0">
-                        <div className="text-white font-bold">
+                        <div className="text-[var(--app-text)] font-bold">
                           {formatPct(log?.threatScore)}
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-muted">
                           {log?.createdAt
                             ? new Date(log.createdAt).toLocaleTimeString()
                             : ""}
@@ -209,59 +209,59 @@ const PresentationDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-2xl overflow-hidden border border-gray-700">
-          <div className="p-6 bg-gray-900/60 border-b border-gray-700">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+        <div className="panel overflow-hidden">
+          <div className="panel-header">
+            <h2 className="text-lg font-semibold text-[var(--app-text)] flex items-center gap-2">
               <span className="text-2xl">🔎</span> Selected Log
             </h2>
           </div>
 
           {!selected ? (
-            <div className="p-6 text-gray-400">Select a log from the feed.</div>
+            <div className="p-6 text-muted">Select a log from the feed.</div>
           ) : (
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-4">
-                  <div className="text-sm text-gray-400">Decision</div>
-                  <div className="text-2xl font-bold text-white">
+                <div className="panel-muted p-4">
+                  <div className="text-sm text-muted">Decision</div>
+                  <div className="text-2xl font-bold text-[var(--app-text)]">
                     {selected.decision}
                   </div>
                 </div>
-                <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-4">
-                  <div className="text-sm text-gray-400">Threat Score</div>
-                  <div className="text-2xl font-bold text-white">
+                <div className="panel-muted p-4">
+                  <div className="text-sm text-muted">Threat Score</div>
+                  <div className="text-2xl font-bold text-[var(--app-text)]">
                     {formatPct(selected.threatScore)}
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-4">
-                <div className="text-sm text-gray-400 mb-2">Model Scores</div>
+              <div className="panel-muted p-4">
+                <div className="text-sm text-muted mb-2">Model Scores</div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                  <div className="text-gray-200">
+                  <div className="text-slate-700 dark:text-slate-200">
                     payload: <span className="font-bold">{formatPct(selected?.prediction?.payload)}</span>
                   </div>
-                  <div className="text-gray-200">
+                  <div className="text-slate-700 dark:text-slate-200">
                     xss: <span className="font-bold">{formatPct(selected?.prediction?.xss)}</span>
                   </div>
-                  <div className="text-gray-200">
+                  <div className="text-slate-700 dark:text-slate-200">
                     bot: <span className="font-bold">{formatPct(selected?.prediction?.bot)}</span>
                   </div>
-                  <div className="text-gray-200">
+                  <div className="text-slate-700 dark:text-slate-200">
                     ddos: <span className="font-bold">{formatPct(selected?.prediction?.ddos)}</span>
                   </div>
-                  <div className="text-gray-200">
+                  <div className="text-slate-700 dark:text-slate-200">
                     behavior: <span className="font-bold">{formatPct(selected?.prediction?.behavior)}</span>
                   </div>
-                  <div className="text-gray-200">
+                  <div className="text-slate-700 dark:text-slate-200">
                     rps: <span className="font-bold">{selected?.prediction?.traffic?.rps?.toFixed?.(2) ?? "—"}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-4">
-                <div className="text-sm text-gray-400 mb-2">Details</div>
-                <pre className="text-xs text-gray-200 overflow-auto max-h-60">
+              <div className="panel-muted p-4">
+                <div className="text-sm text-muted mb-2">Details</div>
+                <pre className="text-xs text-slate-700 dark:text-slate-200 overflow-auto max-h-60">
                   {JSON.stringify(selected, null, 2)}
                 </pre>
               </div>
@@ -274,3 +274,4 @@ const PresentationDashboard = () => {
 };
 
 export default PresentationDashboard;
+

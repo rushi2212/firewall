@@ -8,6 +8,7 @@ import numpy as np
 import hashlib
 import math
 from fastapi import FastAPI, APIRouter, HTTPException, Query, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 # TensorFlow / Keras may be optional at import time for some endpoints
@@ -30,6 +31,21 @@ logger = logging.getLogger("uvicorn.error")
 app = FastAPI(title="Combined FastAPI Models",
               description="Combined endpoints for BILSTM, Bot Detection, User Behaviour and XSS models",
               version="1.0")
+
+INTERNAL_TOKEN = os.getenv("FASTAPI_INTERNAL_TOKEN", "").strip()
+PUBLIC_PATH_PREFIXES = ("/docs", "/redoc", "/openapi.json")
+
+
+@app.middleware("http")
+async def require_internal_token(request: Request, call_next):
+    if INTERNAL_TOKEN and not request.url.path.startswith(PUBLIC_PATH_PREFIXES):
+        provided = request.headers.get("x-internal-token", "")
+        if provided != INTERNAL_TOKEN:
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "Forbidden: invalid internal token"},
+            )
+    return await call_next(request)
 
 # --- feature-extractor dynamic imports (paths contain a hyphen so import by filepath)
 import importlib.util

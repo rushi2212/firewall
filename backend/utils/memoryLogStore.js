@@ -24,13 +24,18 @@ export const addMemoryLog = (partial) => {
   return doc;
 };
 
-export const getMemoryLogs = (limit = 100) => logs.slice(0, limit);
+const filterByTenant = (tenantId) =>
+  tenantId ? logs.filter((l) => String(l?.tenantId || "default") === String(tenantId)) : logs;
 
-export const getMemoryLogById = (id) => logs.find((l) => String(l?._id) === String(id)) ?? null;
+export const getMemoryLogs = (limit = 100, tenantId) =>
+  filterByTenant(tenantId).slice(0, limit);
 
-export const getMemoryLogStats = () => {
+export const getMemoryLogById = (id, tenantId) =>
+  filterByTenant(tenantId).find((l) => String(l?._id) === String(id)) ?? null;
+
+export const getMemoryLogStats = (tenantId) => {
   const stats = { total: 0, allowed: 0, alerted: 0, blocked: 0 };
-  for (const log of logs) {
+  for (const log of filterByTenant(tenantId)) {
     stats.total++;
     const d = String(log?.decision || "").toLowerCase();
     if (d === "allow" || d === "allowed") stats.allowed++;
@@ -40,5 +45,7 @@ export const getMemoryLogStats = () => {
   return stats;
 };
 
-export const getMemoryAlerts = (limit = 100) =>
-  logs.filter((l) => String(l?.decision || "").toLowerCase() !== "allow").slice(0, limit);
+export const getMemoryAlerts = (limit = 100, tenantId) =>
+  filterByTenant(tenantId)
+    .filter((l) => String(l?.decision || "").toLowerCase() !== "allow")
+    .slice(0, limit);

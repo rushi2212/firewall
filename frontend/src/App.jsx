@@ -1,64 +1,61 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
 } from "react-router-dom";
-import { useAuth } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
-import Dashboard from "./pages/Dashboard";
-import Logs from "./pages/Logs";
-import TestPayload from "./pages/TestPayload";
-import Lab from "./pages/Lab";
-import LabLoginPortal from "./pages/LabLoginPortal";
-import LabBotDetection from "./pages/LabBotDetection";
-import LabUserBehaviour from "./pages/LabUserBehaviour";
-import Alerts from "./pages/Alerts";
-import Settings from "./pages/Settings";
-import Login from "./pages/Login";
-import AdminDashboard from "./pages/AdminDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
-import PresentationDashboard from "./pages/PresentationDashboard";
+import Spinner from "./components/ui/Spinner";
+
+// Lazy-loaded pages
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Logs = lazy(() => import("./pages/Logs"));
+const TestPayload = lazy(() => import("./pages/TestPayload"));
+const Lab = lazy(() => import("./pages/Lab"));
+const LabLoginPortal = lazy(() => import("./pages/LabLoginPortal"));
+const LabBotDetection = lazy(() => import("./pages/LabBotDetection"));
+const LabUserBehaviour = lazy(() => import("./pages/LabUserBehaviour"));
+const Alerts = lazy(() => import("./pages/Alerts"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Login = lazy(() => import("./pages/Login"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const PresentationDashboard = lazy(() => import("./pages/PresentationDashboard"));
 
 function App() {
   return (
     <Router>
       <Routes>
         {/* Public Login Route */}
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Suspense fallback={<Spinner size={28} />}><Login /></Suspense>} />
 
         {/* Public Routes with Navbar */}
         <Route
           path="/*"
           element={
-            <div className="min-h-screen bg-linear-to-br from-gray-900 via-gray-800 to-gray-900">
-              <Navbar />
-              <main className="container mx-auto px-4 py-8">
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/logs" element={<Logs />} />
-                  <Route path="/test" element={<TestPayload />} />
-                  <Route path="/lab" element={<Lab />} />
-                  <Route path="/lab/login" element={<LabLoginPortal />} />
-                  <Route path="/lab/bot" element={<LabBotDetection />} />
-                  <Route path="/lab/behaviour" element={<LabUserBehaviour />} />
-                  <Route path="/alerts" element={<Alerts />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/presentation" element={<PresentationDashboard />} />
-
-                  {/* Protected Admin Route */}
-                  <Route
-                    path="/admin/dashboard"
-                    element={
-                      <ProtectedRoute>
-                        <AdminDashboard />
-                      </ProtectedRoute>
-                    }
-                  />
-                </Routes>
-              </main>
-            </div>
+            <ProtectedRoute>
+              <div className="app-shell">
+                <Navbar />
+                <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                  <Suspense fallback={<div className="py-8 flex justify-center"><Spinner size={36} /></div>}>
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/logs" element={<Logs />} />
+                      <Route path="/test" element={<TestPayload />} />
+                      <Route path="/lab" element={<Lab />} />
+                      <Route path="/lab/login" element={<LabLoginPortal />} />
+                      <Route path="/lab/bot" element={<LabBotDetection />} />
+                      <Route path="/lab/behaviour" element={<LabUserBehaviour />} />
+                      <Route path="/alerts" element={<Alerts />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/presentation" element={<PresentationDashboard />} />
+                      <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                    </Routes>
+                  </Suspense>
+                </main>
+              </div>
+            </ProtectedRoute>
           }
         />
       </Routes>

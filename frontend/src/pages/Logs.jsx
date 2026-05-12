@@ -7,16 +7,17 @@ const Logs = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="flex justify-between items-center">
+      <div className="page-header">
         <div>
-          <h1 className="text-4xl font-bold bg-linear-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
-            Request Logs
-          </h1>
-          <p className="text-gray-400 mt-1">Monitor all incoming requests</p>
+          <h1 className="page-title">Request Logs</h1>
+          <p className="page-subtitle">Search, filter, and inspect incoming requests.</p>
         </div>
-        <div className="text-sm text-gray-400 bg-gray-800/50 px-4 py-2 rounded-lg border border-gray-700">
+        <div className="panel-muted px-4 py-2 text-sm text-[var(--app-text-muted)]">
           Total:{" "}
-          <span className="font-bold text-primary-400">{logs.length}</span> logs
+          <span className="font-bold text-[var(--app-text)]">
+            {logs.length}
+          </span>{" "}
+          logs
         </div>
       </div>
 

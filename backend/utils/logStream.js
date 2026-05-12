@@ -1,3 +1,5 @@
+import { broadcastLogEvent } from "./wsHub.js";
+
 const clients = new Set();
 
 const writeEvent = (res, { event, data }) => {
@@ -21,6 +23,8 @@ export const publishLogEvent = (data) => {
       clients.delete(res);
     }
   }
+
+  broadcastLogEvent(data);
 };
 
 export const publishPing = () => {

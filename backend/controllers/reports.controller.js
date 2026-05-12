@@ -192,11 +192,12 @@ export const getRequestsReport = async (req, res) => {
   if (parsed.error) return res.status(400).json({ error: parsed.error });
 
   const { start, end } = parsed;
+  const tenantId = req.tenantId || "default";
 
   // Prefer MongoDB (accurate for large datasets). If DB is unavailable, fall back
   // to the in-memory log store.
   try {
-    const match = { createdAt: { $gte: start, $lte: end } };
+    const match = { tenantId, createdAt: { $gte: start, $lte: end } };
 
     const [result] = await Log.aggregate([
       { $match: match },
@@ -380,7 +381,7 @@ export const getRequestsReport = async (req, res) => {
       })),
     });
   } catch (e) {
-    const report = computeFromLogs(getMemoryLogs(1000), start, end);
+    const report = computeFromLogs(getMemoryLogs(1000, tenantId), start, end);
     res.json(report);
   }
 };
