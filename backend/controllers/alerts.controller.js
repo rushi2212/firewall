@@ -5,12 +5,13 @@ import { getMemoryAlerts } from "../utils/memoryLogStore.js";
 
 export const getAlerts = async (req, res) => {
   try {
-    const alerts = await Log.find({ decision: { $ne: "allow" } })
+    const tenantId = req.tenantId || "default";
+    const alerts = await Log.find({ tenantId, decision: { $ne: "allow" } })
       .sort({ createdAt: -1 })
       .limit(100);
     res.json(alerts);
   } catch (error) {
-    res.json(getMemoryAlerts(100));
+    res.json(getMemoryAlerts(100, req.tenantId));
   }
 };
 

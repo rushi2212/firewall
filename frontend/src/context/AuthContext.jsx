@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
+import { authAPI } from "../services/api";
 
 const AuthContext = createContext();
 
@@ -16,41 +16,41 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
     const storedUser = localStorage.getItem("adminUser");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const token = localStorage.getItem("dashboardToken");
+    if (!storedUser || !token) {
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    setUser(JSON.parse(storedUser));
+    authAPI
+      .me()
+      .then((response) => {
+        setUser(response.data.user);
+        localStorage.setItem("adminUser", JSON.stringify(response.data.user));
+      })
+      .catch(() => {
+        localStorage.removeItem("adminUser");
+        localStorage.removeItem("dashboardToken");
+        setUser(null);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const login = async (username, password) => {
-    try {
-      // For demo purposes - replace with actual API call
-      // const response = await axios.post('/api/admin/login', { username, password });
-
-      // Mock authentication
-      if (username === "admin" && password === "admin123") {
-        const userData = {
-          id: 1,
-          username: "admin",
-          role: "admin",
-          email: "admin@waf.com",
-        };
-        setUser(userData);
-        localStorage.setItem("adminUser", JSON.stringify(userData));
-        return { success: true };
-      } else {
-        throw new Error("Invalid credentials");
-      }
-    } catch (error) {
-      throw error;
-    }
+    const response = await authAPI.login({ username, password });
+    const { user: userData, token } = response.data;
+    setUser(userData);
+    localStorage.setItem("adminUser", JSON.stringify(userData));
+    localStorage.setItem("dashboardToken", token);
+    return { success: true };
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("adminUser");
+    localStorage.removeItem("dashboardToken");
   };
 
   const value = {

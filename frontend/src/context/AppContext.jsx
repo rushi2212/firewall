@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { logsAPI } from "../services/api";
 
 const AppContext = createContext();
@@ -19,15 +19,54 @@ export const AppProvider = ({ children }) => {
     blocked: 0,
     alerted: 0,
   });
+  const emptyDdosStats = {
+    totalAttempts: 0,
+    uniqueAttackerIps: 0,
+    successfulBlocks: 0,
+    blockRate: 0,
+    currentlyTrackedIps: 0,
+    currentlyBlockedIps: 0,
+    topAttackers: [],
+  };
+  const [ddosStats, setDdosStats] = useState(emptyDdosStats);
   const [loading, setLoading] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(2000); // 2 seconds for real-time feel
   const [apiUrl, setApiUrl] = useState("/api");
   const [isRealTime, setIsRealTime] = useState(true);
+  const wsRef = useRef(null);
+
+  const getWsBaseUrl = () => {
+    const explicit = import.meta.env.VITE_WS_URL;
+    if (explicit) return explicit;
+    const apiBase = apiUrl || import.meta.env.VITE_API_URL || "/api";
+    const baseUrl = new URL(apiBase, window.location.origin);
+    const wsUrl = new URL("/ws", baseUrl);
+    wsUrl.protocol = wsUrl.protocol === "https:" ? "wss:" : "ws:";
+    return wsUrl.toString();
+  };
+
+  const getWsUrl = () => {
+    const url = new URL(getWsBaseUrl());
+    const token = localStorage.getItem("dashboardToken");
+    if (token) url.searchParams.set("token", token);
+    return url.toString();
+  };
+
+  const updateStatsFromLog = (prev, log) => {
+    const next = prev || { total: 0, allowed: 0, blocked: 0, alerted: 0 };
+    const decision = String(log?.decision || log?.effectiveDecision || "").toLowerCase();
+    const updated = { ...next, total: next.total + 1 };
+    if (decision === "block" || decision === "blocked") updated.blocked += 1;
+    else if (decision === "alert" || decision === "alerted") updated.alerted += 1;
+    else if (decision === "allow" || decision === "allowed") updated.allowed += 1;
+    else updated.allowed += 1;
+    return updated;
+  };
 
   const fetchLogs = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const response = await logsAPI.getAll();
+      const response = await logsAPI.getAll({ limit: 500 }); // Fetch 500 logs for dashboard
       console.log("Fetched logs response:", response);
 
       // Handle array response directly
@@ -117,23 +156,89 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  const fetchDdosStats = async () => {
+    try {
+      const response = await logsAPI.getDdosStats();
+      const ddosData = response.data || response;
+      if (ddosData && typeof ddosData === "object") {
+        setDdosStats(ddosData);
+      }
+    } catch (error) {
+      console.error("Failed to fetch DDoS stats:", error);
+    }
+  };
+
   useEffect(() => {
     fetchLogs();
     fetchStats();
+    fetchDdosStats();
+  }, []);
 
-    if (isRealTime) {
-      const interval = setInterval(() => {
-        fetchLogs(true); // Silent fetch for real-time updates
-        fetchStats();
-      }, refreshInterval);
+  useEffect(() => {
+    if (!isRealTime) return undefined;
 
-      return () => clearInterval(interval);
-    }
-  }, [refreshInterval, isRealTime]);
+    let closed = false;
+    let reconnectTimer = null;
+
+    const connect = () => {
+      if (closed) return;
+      try {
+        const ws = new WebSocket(getWsUrl());
+        wsRef.current = ws;
+
+        ws.onmessage = (event) => {
+          try {
+            const message = JSON.parse(event.data);
+            if (message?.type === "snapshot") {
+              setLogs(Array.isArray(message.data?.logs) ? message.data.logs : []);
+              setStats(message.data?.stats || { total: 0, allowed: 0, blocked: 0, alerted: 0 });
+              setDdosStats(message.data?.ddosStats || emptyDdosStats);
+              setLoading(false);
+              return;
+            }
+            if (message?.type === "log") {
+              const log = message.data;
+              if (!log) return;
+              setLogs((prev) => {
+                const next = Array.isArray(prev) ? prev : [];
+                if (log?._id && next.some((l) => l?._id === log._id)) return next;
+                return [log, ...next].slice(0, 500);
+              });
+              setStats((prev) => updateStatsFromLog(prev, log));
+              return;
+            }
+            if (message?.type === "ddosStats") {
+              if (message.data) setDdosStats(message.data);
+              return;
+            }
+          } catch (error) {
+            console.error("Bad websocket payload:", error);
+          }
+        };
+
+        ws.onclose = () => {
+          if (!closed) {
+            reconnectTimer = setTimeout(connect, 2000);
+          }
+        };
+      } catch (error) {
+        console.error("WebSocket connect failed:", error);
+      }
+    };
+
+    connect();
+
+    return () => {
+      closed = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (wsRef.current) wsRef.current.close();
+    };
+  }, [isRealTime, apiUrl]);
 
   const value = {
     logs,
     stats,
+    ddosStats,
     loading,
     refreshInterval,
     setRefreshInterval,
@@ -143,6 +248,7 @@ export const AppProvider = ({ children }) => {
     setIsRealTime,
     fetchLogs,
     fetchStats,
+    fetchDdosStats,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

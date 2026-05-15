@@ -23,14 +23,13 @@ const ChartComponent = ({
   title,
   colors = ["#3b82f6", "#ef4444", "#22c55e"],
 }) => {
-  // Custom label for pie chart with white text
+  // Custom label for pie chart with theme-aware text
   const renderCustomLabel = ({
     cx,
     cy,
     midAngle,
     innerRadius,
     outerRadius,
-    name,
     value,
   }) => {
     const RADIAN = Math.PI / 180;
@@ -42,12 +41,12 @@ const ChartComponent = ({
       <text
         x={x}
         y={y}
-        fill="white"
+        fill="var(--app-text)"
         textAnchor={x > cx ? "start" : "end"}
         dominantBaseline="central"
-        style={{ fontSize: "14px", fontWeight: "bold" }}
+        style={{ fontSize: "12px", fontWeight: "700" }}
       >
-        {`${name}: ${value}`}
+        {value}
       </text>
     );
   };
@@ -58,19 +57,20 @@ const ChartComponent = ({
         return (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey={xKey} stroke="#9CA3AF" />
-              <YAxis stroke="#9CA3AF" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--app-border)" />
+              <XAxis dataKey={xKey} stroke="var(--app-text-muted)" />
+              <YAxis stroke="var(--app-text-muted)" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#1F2937",
-                  border: "1px solid #374151",
+                  backgroundColor: "var(--app-surface)",
+                  border: "1px solid var(--app-border)",
                   borderRadius: "8px",
+                  color: "var(--app-text)",
                 }}
-                labelStyle={{ color: "#D1D5DB" }}
-                itemStyle={{ color: "#D1D5DB" }}
+                labelStyle={{ color: "var(--app-text)" }}
+                itemStyle={{ color: "var(--app-text)" }}
               />
-              <Legend wrapperStyle={{ color: "#D1D5DB" }} />
+              <Legend wrapperStyle={{ color: "var(--app-text-muted)" }} />
               <Bar dataKey={dataKey} fill={colors[0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -99,12 +99,13 @@ const ChartComponent = ({
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#1F2937",
-                  border: "1px solid #374151",
+                  backgroundColor: "var(--app-surface)",
+                  border: "1px solid var(--app-border)",
                   borderRadius: "8px",
+                  color: "var(--app-text)",
                 }}
-                labelStyle={{ color: "#D1D5DB" }}
-                itemStyle={{ color: "#D1D5DB" }}
+                labelStyle={{ color: "var(--app-text)" }}
+                itemStyle={{ color: "var(--app-text)" }}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -114,19 +115,20 @@ const ChartComponent = ({
         return (
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey={xKey} stroke="#9CA3AF" />
-              <YAxis stroke="#9CA3AF" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--app-border)" />
+              <XAxis dataKey={xKey} stroke="var(--app-text-muted)" />
+              <YAxis stroke="var(--app-text-muted)" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#1F2937",
-                  border: "1px solid #374151",
+                  backgroundColor: "var(--app-surface)",
+                  border: "1px solid var(--app-border)",
                   borderRadius: "8px",
+                  color: "var(--app-text)",
                 }}
-                labelStyle={{ color: "#D1D5DB" }}
-                itemStyle={{ color: "#D1D5DB" }}
+                labelStyle={{ color: "var(--app-text)" }}
+                itemStyle={{ color: "var(--app-text)" }}
               />
-              <Legend wrapperStyle={{ color: "#D1D5DB" }} />
+              <Legend wrapperStyle={{ color: "var(--app-text-muted)" }} />
               <Line
                 type="monotone"
                 dataKey={dataKey}
@@ -145,9 +147,11 @@ const ChartComponent = ({
   };
 
   return (
-    <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6">
+    <div className="panel p-5">
       {title && (
-        <h3 className="text-lg font-semibold text-gray-200 mb-4">{title}</h3>
+        <h3 className="mb-4 text-sm font-bold text-[var(--app-text)]">
+          {title}
+        </h3>
       )}
       {renderChart()}
     </div>

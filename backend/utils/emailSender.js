@@ -6,6 +6,10 @@ dotenv.config();
 
 export const sendAlertEmail = async (subject, message) => {
   try {
+    if (!ENV.EMAIL_USER || !ENV.EMAIL_PASS || !ENV.ALERT_EMAIL_RECIPIENT) {
+      return;
+    }
+
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -16,7 +20,7 @@ export const sendAlertEmail = async (subject, message) => {
 
     await transporter.sendMail({
       from: ENV.EMAIL_USER,
-      to: process.env.ALERT_EMAIL_RECIPIENT,
+      to: ENV.ALERT_EMAIL_RECIPIENT,
       subject,
       text: message,
     });

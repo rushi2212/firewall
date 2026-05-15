@@ -1,41 +1,33 @@
 import React from "react";
 
-const ThreatCard = ({ title, value, icon, color = "primary", trend }) => {
-  const colorClasses = {
-    primary:
-      "bg-gradient-to-br from-primary-900/50 to-primary-800/30 border-primary-600/50 text-primary-300 shadow-lg shadow-primary-900/20",
-    danger:
-      "bg-gradient-to-br from-danger-900/50 to-danger-800/30 border-danger-600/50 text-danger-300 shadow-lg shadow-danger-900/20",
-    success:
-      "bg-gradient-to-br from-success-900/50 to-success-800/30 border-success-600/50 text-success-300 shadow-lg shadow-success-900/20",
-    warning:
-      "bg-gradient-to-br from-warning-900/50 to-warning-800/30 border-warning-600/50 text-warning-300 shadow-lg shadow-warning-900/20",
-  };
+const toneMap = {
+  primary: { line: "bg-blue-500", text: "text-blue-600 dark:text-blue-300" },
+  danger: { line: "bg-rose-500", text: "text-rose-600 dark:text-rose-300" },
+  success: { line: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-300" },
+  warning: { line: "bg-amber-500", text: "text-amber-600 dark:text-amber-300" },
+};
 
-  const glowClasses = {
-    primary: "hover:shadow-xl hover:shadow-primary-600/30",
-    danger: "hover:shadow-xl hover:shadow-danger-600/30",
-    success: "hover:shadow-xl hover:shadow-success-600/30",
-    warning: "hover:shadow-xl hover:shadow-warning-600/30",
-  };
+const ThreatCard = ({ title, value, icon, color = "primary", trend }) => {
+  const tone = toneMap[color] || toneMap.primary;
 
   return (
-    <div
-      className={`rounded-xl border-2 p-6 ${colorClasses[color]} ${glowClasses[color]} transition-all duration-300 backdrop-blur-sm`}
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-400">{title}</p>
-          <p className="text-4xl font-bold mt-2 text-white">{value}</p>
+    <section className="panel overflow-hidden">
+      <div className={`h-1 ${tone.line}`} />
+      <div className="flex items-start justify-between gap-4 p-5">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-[var(--app-text-muted)]">{title}</p>
+          <p className="mt-2 text-3xl font-bold leading-none text-[var(--app-text)]">{value}</p>
           {trend && (
-            <p className="text-xs mt-2 text-gray-400">
-              {trend.startsWith("+") ? "↗" : "↘"} {trend} from last hour
+            <p className="mt-3 text-xs font-medium text-[var(--app-text-muted)]">
+              {trend} from recent traffic
             </p>
           )}
         </div>
-        <div className="text-5xl opacity-70">{icon}</div>
+        <div className={`icon-box ${tone.text}`}>
+          <span className="text-sm font-black">{icon}</span>
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
 

@@ -10,9 +10,9 @@ const Loader = ({ size = "md", text = "Loading..." }) => {
   return (
     <div className="flex flex-col items-center justify-center p-8">
       <div
-        className={`animate-spin rounded-full border-primary-600 border-t-transparent ${sizeClasses[size]}`}
+        className={`animate-spin rounded-full border-[var(--app-primary)] border-t-transparent ${sizeClasses[size]}`}
       ></div>
-      {text && <p className="mt-4 text-gray-400 text-sm">{text}</p>}
+      {text && <p className="mt-4 text-sm font-medium text-[var(--app-text-muted)]">{text}</p>}
     </div>
   );
 };

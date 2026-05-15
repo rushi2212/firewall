@@ -76,68 +76,68 @@ const LabLoginPortal = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-6 animate-fadeIn p-4">
       <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-bold text-[var(--app-text)]">
           Lab: Login Portal
         </h1>
-        <p className="text-gray-400 mt-1">
+        <p className="text-muted mt-1">
           Sample login form for injecting SQLi/XSS payloads.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6">
-          <h2 className="text-xl font-bold text-gray-200 mb-4 flex items-center gap-2">
+        <div className="panel p-6">
+          <h2 className="text-lg font-semibold text-[var(--app-text)] mb-4 flex items-center gap-2">
             🔐 Login
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--app-text)] mb-2">
                 IP Address
               </label>
               <input
                 type="text"
                 value={ip}
                 onChange={(e) => setIp(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-900 border border-gray-600 text-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                className="input"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--app-text)] mb-2">
                 Username
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-900 border border-gray-600 text-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                className="input"
                 placeholder="Enter username"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--app-text)] mb-2">
                 Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-900 border border-gray-600 text-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                className="input"
                 placeholder="Enter password"
                 required
               />
             </div>
 
-            <label className="flex items-center gap-2 text-sm text-gray-300">
+            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
               <input
                 type="checkbox"
                 checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
-                className="accent-primary-600"
+                className="accent-blue-600"
               />
               Remember me
             </label>
@@ -145,14 +145,14 @@ const LabLoginPortal = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-primary-600 to-primary-700 text-white py-3 px-4 rounded-lg hover:from-primary-700 hover:to-primary-800 disabled:opacity-50 transition-all font-medium shadow-lg hover:shadow-xl hover:shadow-primary-600/50 transform hover:-translate-y-0.5"
+              className="w-full btn-primary py-3 px-4 rounded-lg disabled:opacity-50 transition-all font-medium"
             >
               {loading ? "Analyzing..." : "🔍 Analyze Login"}
             </button>
           </form>
 
           <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-medium text-[var(--app-text)] mb-3 flex items-center gap-2">
               ⚡ Quick Inject
             </h3>
             <div className="space-y-2">
@@ -160,12 +160,12 @@ const LabLoginPortal = () => {
                 <button
                   key={q.label}
                   onClick={() => applyQuick(q)}
-                  className="w-full text-left px-3 py-2 bg-gray-900/50 border border-gray-700 hover:border-primary-600 hover:bg-gray-900 rounded-lg text-sm transition-all group"
+                  className="w-full text-left px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600 rounded-lg text-sm transition-all group"
                 >
-                  <span className="font-medium text-gray-300 group-hover:text-primary-400">
+                  <span className="font-medium text-slate-700 dark:text-slate-200">
                     {q.label}
                   </span>
-                  <p className="text-xs text-gray-500 font-mono truncate mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-mono truncate mt-1">
                     u={q.u} | p={q.p}
                   </p>
                 </button>
@@ -173,23 +173,23 @@ const LabLoginPortal = () => {
             </div>
           </div>
 
-          <div className="mt-6 bg-gray-900/40 border border-gray-700 rounded-lg p-3">
-            <p className="text-xs text-gray-400 mb-1">Sent payload</p>
-            <p className="text-xs font-mono text-gray-300 break-all">
+          <div className="mt-6 panel-muted p-3">
+            <p className="text-xs text-muted mb-1">Sent payload</p>
+            <p className="text-xs font-mono text-slate-700 dark:text-slate-200 break-all">
               {buildPayloadString()}
             </p>
           </div>
         </div>
 
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl p-6">
-          <h2 className="text-xl font-bold text-gray-200 mb-4 flex items-center gap-2">
+        <div className="panel p-6">
+          <h2 className="text-lg font-semibold text-[var(--app-text)] mb-4 flex items-center gap-2">
             📊 Results
           </h2>
 
           {loading && <Loader text="Analyzing login payload..." />}
 
           {error && (
-            <div className="bg-danger-900/30 border border-danger-600 text-danger-300 px-4 py-3 rounded-lg animate-shake">
+            <div className="bg-rose-50 border border-rose-200 text-rose-700 dark:bg-rose-900/30 dark:border-rose-700 dark:text-rose-200 px-4 py-3 rounded-lg">
               {error}
             </div>
           )}
@@ -200,20 +200,20 @@ const LabLoginPortal = () => {
                 <span
                   className={`px-6 py-3 text-lg font-bold rounded-full shadow-xl ${
                     result.decision === "block"
-                      ? "bg-danger-600 text-white border-2 border-danger-400 shadow-danger-600/50 animate-pulse"
+                      ? "badge badge-block"
                       : result.decision === "alert"
-                      ? "bg-warning-600 text-white border-2 border-warning-400 shadow-warning-600/50"
-                      : "bg-success-600 text-white border-2 border-success-400 shadow-success-600/50"
+                      ? "badge badge-alert"
+                      : "badge badge-allow"
                   }`}
                 >
                   {result.decision?.toUpperCase()}
                 </span>
               </div>
 
-              <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4">
-                <p className="text-sm text-gray-400 mb-1">Threat Score</p>
+              <div className="panel-muted p-4">
+                <p className="text-sm text-muted mb-1">Threat Score</p>
                 <div className="flex items-center gap-3">
-                  <div className="flex-1 bg-gray-700 rounded-full h-4">
+                  <div className="flex-1 bg-slate-200 dark:bg-slate-800 rounded-full h-4">
                     <div
                       className={`h-4 rounded-full transition-all ${
                         result.threatScore > 0.7
@@ -225,25 +225,25 @@ const LabLoginPortal = () => {
                       style={{ width: `${(result.threatScore || 0) * 100}%` }}
                     ></div>
                   </div>
-                  <span className="text-lg font-bold text-white">
+                  <span className="text-lg font-bold text-[var(--app-text)]">
                     {((result.threatScore || 0) * 100).toFixed(1)}%
                   </span>
                 </div>
               </div>
 
-              <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 space-y-2">
-                <p className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <div className="panel-muted space-y-2 p-4">
+                <p className="text-sm font-medium text-[var(--app-text)] flex items-center gap-2">
                   🤖 Model Scores
                 </p>
                 {Object.entries(result.modelScores).map(([model, score]) => (
                   <div
                     key={model}
-                    className="flex justify-between items-center bg-gray-800/40 px-3 py-2 rounded-lg"
+                    className="flex items-center justify-between rounded-lg border border-[var(--app-border)] bg-[var(--app-surface-raised)] px-3 py-2"
                   >
-                    <span className="text-sm text-gray-300 capitalize">
+                    <span className="text-sm text-[var(--app-text)] capitalize">
                       {model}
                     </span>
-                    <span className="text-sm font-mono text-gray-200">
+                    <span className="text-sm font-mono text-slate-700 dark:text-slate-200">
                       {(Number(score) * 100).toFixed(1)}%
                     </span>
                   </div>
@@ -253,7 +253,7 @@ const LabLoginPortal = () => {
           )}
 
           {!loading && !result && !error && (
-            <div className="text-gray-400 text-sm">
+            <div className="text-sm text-[var(--app-text-muted)]">
               Submit the form to see model scores.
             </div>
           )}
@@ -264,3 +264,5 @@ const LabLoginPortal = () => {
 };
 
 export default LabLoginPortal;
+
+
