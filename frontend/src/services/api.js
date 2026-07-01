@@ -1,6 +1,23 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+const getDefaultApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  return import.meta.env.DEV ? "http://localhost:5000/api" : "/api";
+};
+
+const API_BASE_URL = getDefaultApiBaseUrl();
+
+export const getApiStreamUrl = (path) => {
+  const normalizedPath = String(path || "").startsWith("/")
+    ? String(path || "")
+    : `/${path || ""}`;
+
+  if (API_BASE_URL.endsWith("/api")) {
+    return `${API_BASE_URL}${normalizedPath}`;
+  }
+
+  return `${API_BASE_URL.replace(/\/$/, "")}${normalizedPath}`;
+};
 
 const DEFAULT_TIMEOUT = 8000; // ms
 
@@ -23,7 +40,7 @@ api.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor
@@ -33,7 +50,7 @@ api.interceptors.response.use(
     // central place to add toast/notification or log to monitoring
     console.error("API Error:", error.response?.data || error.message);
     return Promise.reject(error);
-  }
+  },
 );
 
 // Simple retry wrapper with exponential backoff for idempotent GETs
@@ -44,7 +61,8 @@ async function requestWithRetry(fn, { retries = 2, delay = 300 } = {}) {
       return await fn();
     } catch (err) {
       attempt += 1;
-      const shouldRetry = attempt <= retries && (!err.response || err.response.status >= 500);
+      const shouldRetry =
+        attempt <= retries && (!err.response || err.response.status >= 500);
       if (!shouldRetry) throw err;
       await new Promise((r) => setTimeout(r, delay * Math.pow(2, attempt - 1)));
     }
@@ -65,8 +83,13 @@ export const logsAPI = {
   getAll: (params) => requestWithRetry(() => api.get("/logs", { params })),
   getById: (id) => requestWithRetry(() => api.get(`/logs/${id}`)),
   getStats: () => requestWithRetry(() => api.get("/logs/stats")),
-  getDdos: (params) => requestWithRetry(() => api.get("/logs/ddos", { params })),
+  getDdos: (params) =>
+    requestWithRetry(() => api.get("/logs/ddos", { params })),
   getDdosStats: () => requestWithRetry(() => api.get("/logs/ddos/stats")),
+};
+
+export const presentationAPI = {
+  startSimulation: () => api.post("/presentation/simulate"),
 };
 
 export const alertsAPI = {
@@ -74,8 +97,14 @@ export const alertsAPI = {
   test: () => api.post("/alerts/test"),
 };
 
+export const policyAPI = {
+  get: () => requestWithRetry(() => api.get("/policy")),
+  update: (payload) => api.put("/policy", payload),
+};
+
 export const reportsAPI = {
-  getRequests: (params) => requestWithRetry(() => api.get("/reports/requests", { params })),
+  getRequests: (params) =>
+    requestWithRetry(() => api.get("/reports/requests", { params })),
 };
 
 export default api;

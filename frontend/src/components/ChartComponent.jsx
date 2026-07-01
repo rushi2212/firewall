@@ -147,7 +147,7 @@ const ChartComponent = ({
   };
 
   return (
-    <div className="panel p-5">
+    <div className="panel min-w-0 overflow-hidden p-5">
       {title && (
         <h3 className="mb-4 text-sm font-bold text-[var(--app-text)]">
           {title}

@@ -17,6 +17,10 @@ export const getLogs = async (req, res) => {
     const tenantId = req.tenantId || "default";
     const limit = Math.min(Number(req.query.limit) || 100, 1000); // Max 1000, default 100
     const skip = Number(req.query.skip) || 0;
+
+    if (Log.db.readyState !== 1) {
+      return res.json(getMemoryLogs(limit, tenantId));
+    }
     
     const logs = await Log.find({ tenantId })
       .sort({ createdAt: -1 })
@@ -33,6 +37,12 @@ export const getLogs = async (req, res) => {
 export const getLogById = async (req, res) => {
   try {
     const tenantId = req.tenantId || "default";
+    if (Log.db.readyState !== 1) {
+      const mem = getMemoryLogById(req.params.id, tenantId);
+      if (!mem) return res.status(404).json({ error: "Log not found" });
+      return res.json(mem);
+    }
+
     const log = await Log.findOne({ _id: req.params.id, tenantId });
     if (!log) return res.status(404).json({ error: "Log not found" });
     res.json(log);
@@ -46,6 +56,10 @@ export const getLogById = async (req, res) => {
 export const getLogStats = async (req, res) => {
   try {
     const tenantId = req.tenantId || "default";
+    if (Log.db.readyState !== 1) {
+      return res.json(getMemoryLogStats(tenantId));
+    }
+
     const total = await Log.countDocuments({ tenantId });
     const grouped = await Log.aggregate([
       { $match: { tenantId } },

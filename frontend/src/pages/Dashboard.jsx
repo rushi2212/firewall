@@ -41,14 +41,14 @@ const Dashboard = () => {
         <Button onClick={handleRefresh}>Refresh data</Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid min-w-0 grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
         <ThreatCard title="Total Requests" value={(stats?.total || 0).toLocaleString()} icon="T" color="primary" />
         <ThreatCard title="Blocked" value={(stats?.blocked || 0).toLocaleString()} icon="B" color="danger" />
         <ThreatCard title="Alerts" value={(stats?.alerted || 0).toLocaleString()} icon="A" color="warning" />
         <ThreatCard title="Allowed" value={(stats?.allowed || 0).toLocaleString()} icon="O" color="success" />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-2">
         <ChartComponent
           type="pie"
           data={decisionData}

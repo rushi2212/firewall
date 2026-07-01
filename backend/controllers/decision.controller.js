@@ -10,6 +10,7 @@ import { addMemoryLog } from "../utils/memoryLogStore.js";
 import { ENV } from "../config/env.js";
 import { redactPayload } from "../utils/redactPayload.js";
 import { evaluateWafRules } from "../utils/wafRules.js";
+import { makeAiDecision } from "../utils/decisionAdvisor.js";
 
 const fastApiBaseUrl = String(ENV.FASTAPI_URL || "http://localhost:8000").replace(
   /\/+$/,
@@ -34,6 +35,52 @@ const toStringPayload = (value) => {
     return String(value);
   }
 };
+
+const normalizeIp = (value) =>
+  String(value || "")
+    .trim()
+    .replace(/^::ffff:/, "");
+
+const ipv4ToNumber = (ip) => {
+  const parts = normalizeIp(ip).split(".");
+  if (parts.length !== 4) return null;
+  let total = 0;
+  for (const part of parts) {
+    if (!/^\d+$/.test(part)) return null;
+    const value = Number(part);
+    if (value < 0 || value > 255) return null;
+    total = (total << 8) + value;
+  }
+  return total >>> 0;
+};
+
+const ipMatchesEntry = (ip, entry) => {
+  const normalizedIp = normalizeIp(ip);
+  const normalizedEntry = normalizeIp(entry);
+  if (!normalizedIp || !normalizedEntry) return false;
+  if (normalizedIp === normalizedEntry) return true;
+
+  const [rangeIp, prefix] = normalizedEntry.split("/");
+  if (prefix === undefined) return false;
+  const ipNumber = ipv4ToNumber(normalizedIp);
+  const rangeNumber = ipv4ToNumber(rangeIp);
+  const prefixNumber = Number(prefix);
+  if (
+    ipNumber === null ||
+    rangeNumber === null ||
+    !Number.isInteger(prefixNumber) ||
+    prefixNumber < 0 ||
+    prefixNumber > 32
+  ) {
+    return false;
+  }
+
+  const mask = prefixNumber === 0 ? 0 : (0xffffffff << (32 - prefixNumber)) >>> 0;
+  return (ipNumber & mask) === (rangeNumber & mask);
+};
+
+const findIpPolicyMatch = (ip, entries = []) =>
+  entries.find((entry) => ipMatchesEntry(ip, entry)) || null;
 
 const detectorCall = async (name, request) => {
   const startedAt = Date.now();
@@ -87,6 +134,88 @@ export const analyzePayload = async ({
 
   const traffic = recordRequest(ip);
   const ddosScore = computeDdosScore(traffic.rps);
+  const policy = await getPolicyForTenant(tenantId);
+
+  const allowIpMatch = findIpPolicyMatch(ip, policy.allowIps);
+  const blockIpMatch = allowIpMatch ? null : findIpPolicyMatch(ip, policy.blockIps);
+
+  if (allowIpMatch || blockIpMatch) {
+    const policyOverride = {
+      model: allowIpMatch ? "ip_allow_list" : "ip_block_list",
+      score: allowIpMatch ? 0 : 1,
+      matchedIp: allowIpMatch || blockIpMatch,
+    };
+
+    const results = {
+      rules: Number(rules.score) || 0,
+      payload: 0,
+      bot: 0,
+      ddos: Number(ddosScore) || 0,
+      behavior: 0,
+      xss: 0,
+      features: {},
+      ruleMatches: rules.matches,
+      reasons: rules.reasons,
+      detectorStatus: [],
+      traffic,
+      policyOverride,
+    };
+    const aiDecision = await makeAiDecision({
+      payload: rawPayload,
+      ip,
+      scores: results,
+      threatScore: allowIpMatch ? 0 : 1,
+      ruleMatches: rules.matches,
+      policy,
+      policyOverride,
+      detectorStatus: results.detectorStatus,
+      traffic,
+      request: { method, path, ua, referer, tenantId },
+    });
+    const decision = aiDecision.decision;
+    const effectiveDecision = decision;
+    results.aiDecision = aiDecision;
+
+    let log;
+    try {
+      log = await Log.create({
+        tenantId,
+        ip,
+        method,
+        path,
+        ua,
+        referer,
+        payload: redacted,
+        payloadHash: hash,
+        prediction: results,
+        threatScore: allowIpMatch ? 0 : 1,
+        decision,
+        effectiveDecision,
+        override: aiDecision.override,
+        detectorErrors: [],
+      });
+    } catch (e) {
+      log = addMemoryLog({
+        tenantId,
+        ip,
+        method,
+        path,
+        ua,
+        referer,
+        payload: redacted,
+        payloadHash: hash,
+        prediction: results,
+        threatScore: allowIpMatch ? 0 : 1,
+        decision,
+        effectiveDecision,
+        override: aiDecision.override,
+        detectorErrors: [],
+      });
+    }
+
+    publishLogEvent(log);
+    return { log, decision, effectiveDecision, shadowMode: false, traffic };
+  }
 
   let featureData = {};
   const detectorStatus = [];
@@ -169,6 +298,7 @@ export const analyzePayload = async ({
     xss: Number(xssScore) || 0,
     features: featureData || {},
     ruleMatches: rules.matches,
+    reasons: rules.reasons,
     detectorStatus: detectorStatus.map(({ name, ok, latencyMs, error }) => ({
       name,
       ok,
@@ -179,26 +309,6 @@ export const analyzePayload = async ({
   };
 
   const threatScore = calculateThreatScore(results);
-  const policy = await getPolicyForTenant(tenantId);
-
-  let decision = "allow";
-  if (threatScore >= policy.blockThreshold) decision = "block";
-  else if (threatScore >= policy.alertThreshold) decision = "alert";
-
-  let overrideReason = null;
-  if (rules.score >= policy.overrideThreshold) {
-    decision = "block";
-    overrideReason = { model: "rules", score: rules.score, matches: rules.matches };
-  }
-
-  if (detectorErrors.length > 0 && failClosedOnDetectorError) {
-    decision = "block";
-    overrideReason = {
-      model: "detector_health",
-      score: 1,
-      errors: detectorErrors,
-    };
-  }
 
   const modelScores = {
     rules: results.rules,
@@ -208,15 +318,28 @@ export const analyzePayload = async ({
     behavior: results.behavior,
     xss: results.xss,
   };
-  const topModel = Object.keys(modelScores).reduce((a, b) =>
-    modelScores[a] >= modelScores[b] ? a : b
-  );
-  const topScore = Number(modelScores[topModel] || 0);
-  if (!overrideReason && topScore >= policy.overrideThreshold) {
-    decision = "block";
-    overrideReason = { model: topModel, score: topScore };
-  }
+  const aiDecision = await makeAiDecision({
+    payload: rawPayload,
+    ip,
+    scores: {
+      ...modelScores,
+      features: results.features,
+      ruleMatches: results.ruleMatches,
+      ruleReasons: results.reasons,
+      traffic: results.traffic,
+    },
+    threatScore,
+    ruleMatches: rules.matches,
+    detectorErrors,
+    detectorStatus: results.detectorStatus,
+    traffic,
+    policy,
+    failClosedOnDetectorError,
+    request: { method, path, ua, referer, tenantId },
+  });
+  results.aiDecision = aiDecision;
 
+  const decision = aiDecision.decision;
   const shadowMode = policy.shadowMode;
   const effectiveDecision = shadowMode && decision === "block" ? "alert" : decision;
 
@@ -235,7 +358,7 @@ export const analyzePayload = async ({
       threatScore,
       decision,
       effectiveDecision,
-      override: overrideReason,
+      override: aiDecision.override,
       detectorErrors,
     });
   } catch (e) {
@@ -252,7 +375,7 @@ export const analyzePayload = async ({
       threatScore,
       decision,
       effectiveDecision,
-      override: overrideReason,
+      override: aiDecision.override,
       detectorErrors,
     });
   }
@@ -262,8 +385,8 @@ export const analyzePayload = async ({
   if (decision !== "allow") {
     let subject = `Threat Alert: ${decision.toUpperCase()}`;
     let body = `Suspicious activity detected from ${ip} with score ${threatScore}`;
-    if (overrideReason) {
-      body += ` -- immediate block due to ${overrideReason.model} (score=${overrideReason.score})`;
+    if (aiDecision.override) {
+      body += ` -- immediate block due to ${aiDecision.override.model} (score=${aiDecision.override.score})`;
     }
     setImmediate(() => {
       sendAlertEmail(subject, body);
@@ -332,15 +455,10 @@ export const analyzeRequest = async (req, res) => {
       await log.save();
     }
 
-    // Check if this is a DDoS attack and we should block immediately
-    const isDdosBlocked = traffic?.isDdos && traffic?.isCurrentlyBlocked && !traffic?.isWhitelisted;
-    const finalDecision = isDdosBlocked ? "block" : decision;
-    const finalEffectiveDecision = isDdosBlocked ? "block" : effectiveDecision;
-
     res.json({ 
       log, 
-      decision: finalDecision, 
-      effectiveDecision: finalEffectiveDecision,
+      decision,
+      effectiveDecision,
       ddosDetected: traffic?.isDdos,
       ddosStatus: traffic ? {
         rps: traffic.rps,

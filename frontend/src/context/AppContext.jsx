@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import { logsAPI } from "../services/api";
 
 const AppContext = createContext();
@@ -31,14 +37,20 @@ export const AppProvider = ({ children }) => {
   const [ddosStats, setDdosStats] = useState(emptyDdosStats);
   const [loading, setLoading] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(2000); // 2 seconds for real-time feel
-  const [apiUrl, setApiUrl] = useState("/api");
+  const [apiUrl, setApiUrl] = useState(
+    import.meta.env.VITE_API_URL ||
+      (import.meta.env.DEV ? "http://localhost:5000/api" : "/api"),
+  );
   const [isRealTime, setIsRealTime] = useState(true);
   const wsRef = useRef(null);
 
   const getWsBaseUrl = () => {
     const explicit = import.meta.env.VITE_WS_URL;
     if (explicit) return explicit;
-    const apiBase = apiUrl || import.meta.env.VITE_API_URL || "/api";
+    const apiBase =
+      apiUrl ||
+      import.meta.env.VITE_API_URL ||
+      (import.meta.env.DEV ? "http://localhost:5000/api" : "/api");
     const baseUrl = new URL(apiBase, window.location.origin);
     const wsUrl = new URL("/ws", baseUrl);
     wsUrl.protocol = wsUrl.protocol === "https:" ? "wss:" : "ws:";
@@ -54,11 +66,15 @@ export const AppProvider = ({ children }) => {
 
   const updateStatsFromLog = (prev, log) => {
     const next = prev || { total: 0, allowed: 0, blocked: 0, alerted: 0 };
-    const decision = String(log?.decision || log?.effectiveDecision || "").toLowerCase();
+    const decision = String(
+      log?.decision || log?.effectiveDecision || "",
+    ).toLowerCase();
     const updated = { ...next, total: next.total + 1 };
     if (decision === "block" || decision === "blocked") updated.blocked += 1;
-    else if (decision === "alert" || decision === "alerted") updated.alerted += 1;
-    else if (decision === "allow" || decision === "allowed") updated.allowed += 1;
+    else if (decision === "alert" || decision === "alerted")
+      updated.alerted += 1;
+    else if (decision === "allow" || decision === "allowed")
+      updated.allowed += 1;
     else updated.allowed += 1;
     return updated;
   };
@@ -129,7 +145,7 @@ export const AppProvider = ({ children }) => {
         }
         return acc;
       },
-      { total: 0, allowed: 0, blocked: 0, alerted: 0 }
+      { total: 0, allowed: 0, blocked: 0, alerted: 0 },
     );
 
     console.log("Calculated stats:", calculatedStats);
@@ -190,8 +206,17 @@ export const AppProvider = ({ children }) => {
           try {
             const message = JSON.parse(event.data);
             if (message?.type === "snapshot") {
-              setLogs(Array.isArray(message.data?.logs) ? message.data.logs : []);
-              setStats(message.data?.stats || { total: 0, allowed: 0, blocked: 0, alerted: 0 });
+              setLogs(
+                Array.isArray(message.data?.logs) ? message.data.logs : [],
+              );
+              setStats(
+                message.data?.stats || {
+                  total: 0,
+                  allowed: 0,
+                  blocked: 0,
+                  alerted: 0,
+                },
+              );
               setDdosStats(message.data?.ddosStats || emptyDdosStats);
               setLoading(false);
               return;
@@ -201,7 +226,8 @@ export const AppProvider = ({ children }) => {
               if (!log) return;
               setLogs((prev) => {
                 const next = Array.isArray(prev) ? prev : [];
-                if (log?._id && next.some((l) => l?._id === log._id)) return next;
+                if (log?._id && next.some((l) => l?._id === log._id))
+                  return next;
                 return [log, ...next].slice(0, 500);
               });
               setStats((prev) => updateStatsFromLog(prev, log));

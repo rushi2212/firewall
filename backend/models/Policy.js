@@ -7,6 +7,8 @@ const policySchema = new mongoose.Schema(
     alertThreshold: { type: Number, default: 0.5 },
     overrideThreshold: { type: Number, default: 0.9 },
     shadowMode: { type: Boolean, default: false },
+    allowIps: { type: [String], default: [] },
+    blockIps: { type: [String], default: [] },
   },
   { timestamps: true }
 );

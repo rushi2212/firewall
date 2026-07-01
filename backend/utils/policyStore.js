@@ -8,7 +8,18 @@ const defaultPolicy = () => ({
   alertThreshold: Number(ENV.DEFAULT_ALERT_THRESHOLD ?? 0.5),
   overrideThreshold: Number(ENV.DEFAULT_OVERRIDE_THRESHOLD ?? 0.9),
   shadowMode: String(ENV.SHADOW_MODE || "").toLowerCase() === "true",
+  allowIps: [],
+  blockIps: [],
 });
+
+const normalizeIpList = (value) => {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(
+    value
+      .map((item) => String(item || "").trim())
+      .filter(Boolean)
+  )];
+};
 
 const normalizePolicy = (input) => {
   const base = defaultPolicy();
@@ -25,6 +36,8 @@ const normalizePolicy = (input) => {
     alertThreshold,
     overrideThreshold,
     shadowMode,
+    allowIps: normalizeIpList(input.allowIps || base.allowIps),
+    blockIps: normalizeIpList(input.blockIps || base.blockIps),
   };
 };
 
@@ -45,7 +58,11 @@ export const getPolicyForTenant = async (tenantId = "default") => {
 };
 
 export const setPolicyForTenant = async (tenantId, updates) => {
-  const normalized = normalizePolicy(updates || {});
+  const definedUpdates = Object.fromEntries(
+    Object.entries(updates || {}).filter(([, value]) => value !== undefined)
+  );
+  const current = await getPolicyForTenant(tenantId);
+  const normalized = normalizePolicy({ ...current, ...definedUpdates });
 
   try {
     const saved = await Policy.findOneAndUpdate(
@@ -66,6 +83,8 @@ export const validatePolicyInput = (payload = {}) => {
   const blockThreshold = toNum(payload.blockThreshold);
   const alertThreshold = toNum(payload.alertThreshold);
   const overrideThreshold = toNum(payload.overrideThreshold);
+  const allowIps = payload.allowIps;
+  const blockIps = payload.blockIps;
 
   const checkRange = (label, value) => {
     if (value === undefined || Number.isNaN(value)) return;
@@ -84,6 +103,14 @@ export const validatePolicyInput = (payload = {}) => {
     errors.push("blockThreshold must be >= alertThreshold");
   }
 
+  if (allowIps !== undefined && !Array.isArray(allowIps)) {
+    errors.push("allowIps must be an array");
+  }
+
+  if (blockIps !== undefined && !Array.isArray(blockIps)) {
+    errors.push("blockIps must be an array");
+  }
+
   return {
     errors,
     normalized: {
@@ -92,6 +119,8 @@ export const validatePolicyInput = (payload = {}) => {
       overrideThreshold,
       shadowMode:
         typeof payload.shadowMode === "boolean" ? payload.shadowMode : undefined,
+      allowIps: allowIps === undefined ? undefined : normalizeIpList(allowIps),
+      blockIps: blockIps === undefined ? undefined : normalizeIpList(blockIps),
     },
   };
 };

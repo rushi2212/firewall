@@ -94,6 +94,7 @@ body {
   border: 1px solid var(--app-border);
   border-radius: 8px;
   box-shadow: var(--app-shadow);
+  min-width: 0;
 }
 
 .panel-muted {
@@ -238,6 +239,7 @@ body {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
+  table-layout: fixed;
 }
 
 .data-table th {
@@ -249,8 +251,8 @@ body {
   font-weight: 750;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  white-space: nowrap;
   border-bottom: 1px solid var(--app-border);
+  overflow-wrap: anywhere;
 }
 
 .data-table td {
@@ -258,6 +260,8 @@ body {
   padding: 0.9rem 1rem;
   border-bottom: 1px solid var(--app-border);
   vertical-align: middle;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .data-table tbody tr:hover {
@@ -289,10 +293,85 @@ body {
   flex: 0 0 auto;
 }
 
+.brand-mark {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--app-primary) 12%, var(--app-surface));
+  border: 1px solid color-mix(in srgb, var(--app-primary) 32%, var(--app-border));
+  color: var(--app-primary);
+  flex: 0 0 auto;
+}
+
+.setting-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface-muted);
+  padding: 1rem;
+}
+
+.logs-table .logs-col-time {
+  width: 15%;
+}
+
+.logs-table .logs-col-ip {
+  width: 13%;
+}
+
+.logs-table .logs-col-payload {
+  width: 34%;
+}
+
+.logs-table .logs-col-signal {
+  width: 14%;
+}
+
+.logs-table .logs-col-score {
+  width: 14%;
+}
+
+.logs-table .logs-col-decision {
+  width: 10%;
+}
+
 @media (max-width: 768px) {
   .page-header {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.75rem 0.55rem;
+    font-size: 0.78rem;
+  }
+
+  .logs-table .logs-col-time {
+    width: 17%;
+  }
+
+  .logs-table .logs-col-ip,
+  .logs-table .logs-col-signal {
+    width: 12%;
+  }
+
+  .logs-table .logs-col-payload {
+    width: 33%;
+  }
+
+  .logs-table .logs-col-score {
+    width: 15%;
+  }
+
+  .logs-table .logs-col-decision {
+    width: 11%;
   }
 }
 

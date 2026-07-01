@@ -9,8 +9,8 @@ const Logs = () => {
     <div className="space-y-6 animate-fadeIn">
       <div className="page-header">
         <div>
-          <h1 className="page-title">Request Logs</h1>
-          <p className="page-subtitle">Search, filter, and inspect incoming requests.</p>
+          <h1 className="page-title">Payload Logs</h1>
+          <p className="page-subtitle">Search, filter, and inspect payloads scored by the trained AI detectors.</p>
         </div>
         <div className="panel-muted px-4 py-2 text-sm text-[var(--app-text-muted)]">
           Total:{" "}
