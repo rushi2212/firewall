@@ -12,10 +12,9 @@ import { redactPayload } from "../utils/redactPayload.js";
 import { evaluateWafRules } from "../utils/wafRules.js";
 import { makeAiDecision } from "../utils/decisionAdvisor.js";
 
-const fastApiBaseUrl = String(ENV.FASTAPI_URL || "http://localhost:8000").replace(
-  /\/+$/,
-  ""
-);
+const fastApiBaseUrl = String(
+  ENV.FASTAPI_URL || "http://localhost:8000",
+).replace(/\/+$/, "");
 const fastApi = axios.create({
   baseURL: fastApiBaseUrl,
   timeout: Number(ENV.FASTAPI_TIMEOUT_MS || 750),
@@ -75,7 +74,8 @@ const ipMatchesEntry = (ip, entry) => {
     return false;
   }
 
-  const mask = prefixNumber === 0 ? 0 : (0xffffffff << (32 - prefixNumber)) >>> 0;
+  const mask =
+    prefixNumber === 0 ? 0 : (0xffffffff << (32 - prefixNumber)) >>> 0;
   return (ipNumber & mask) === (rangeNumber & mask);
 };
 
@@ -137,9 +137,12 @@ export const analyzePayload = async ({
   const policy = await getPolicyForTenant(tenantId);
 
   const allowIpMatch = findIpPolicyMatch(ip, policy.allowIps);
-  const blockIpMatch = allowIpMatch ? null : findIpPolicyMatch(ip, policy.blockIps);
+  const blockIpMatch = allowIpMatch
+    ? null
+    : findIpPolicyMatch(ip, policy.blockIps);
 
   if (allowIpMatch || blockIpMatch) {
+    const policyDecision = allowIpMatch ? "allow" : "block";
     const policyOverride = {
       model: allowIpMatch ? "ip_allow_list" : "ip_block_list",
       score: allowIpMatch ? 0 : 1,
@@ -172,8 +175,8 @@ export const analyzePayload = async ({
       traffic,
       request: { method, path, ua, referer, tenantId },
     });
-    const decision = aiDecision.decision;
-    const effectiveDecision = decision;
+    const decision = policyDecision;
+    const effectiveDecision = policyDecision;
     results.aiDecision = aiDecision;
 
     let log;
@@ -220,7 +223,7 @@ export const analyzePayload = async ({
   let featureData = {};
   const detectorStatus = [];
   const featureRes = await detectorCall("features", () =>
-    fastApi.post("/feature/extract_features", { payload: rawPayload, ip, ua })
+    fastApi.post("/feature/extract_features", { payload: rawPayload, ip, ua }),
   );
   detectorStatus.push(featureRes);
   if (featureRes.ok) {
@@ -228,22 +231,36 @@ export const analyzePayload = async ({
   }
 
   const calls = [
-    detectorCall("bilstm", () => fastApi.post("/bilstm/predict", { text: rawPayload })),
-    detectorCall("xss", () => fastApi.post("/xss/predict", { payload: rawPayload })),
+    detectorCall("bilstm", () =>
+      fastApi.post("/bilstm/predict", { text: rawPayload }),
+    ),
+    detectorCall("xss", () =>
+      fastApi.post("/xss/predict", { payload: rawPayload }),
+    ),
   ];
 
   let hasFlow = false;
   if (flow && typeof flow === "object") {
     hasFlow = true;
-    calls.push(detectorCall("bot_supervised", () => fastApi.post("/bot/predict/supervised", flow)));
-    calls.push(detectorCall("bot_unsupervised", () => fastApi.post("/bot/predict/unsupervised", flow)));
+    calls.push(
+      detectorCall("bot_supervised", () =>
+        fastApi.post("/bot/predict/supervised", flow),
+      ),
+    );
+    calls.push(
+      detectorCall("bot_unsupervised", () =>
+        fastApi.post("/bot/predict/unsupervised", flow),
+      ),
+    );
   }
 
   let hasSessions = false;
   if (sessions && Array.isArray(sessions)) {
     hasSessions = true;
     calls.push(
-      detectorCall("behaviour", () => fastApi.post("/behaviour/predict", { sessions }))
+      detectorCall("behaviour", () =>
+        fastApi.post("/behaviour/predict", { sessions }),
+      ),
     );
   }
 
@@ -264,13 +281,11 @@ export const analyzePayload = async ({
 
   const payloadScore =
     bilRes && bilRes.ok && bilRes.data?.results
-      ? bilRes.data.results[0].confidence ?? 0
+      ? (bilRes.data.results[0].confidence ?? 0)
       : 0;
 
   const xssScore =
-    xssRes &&
-    xssRes.ok &&
-    xssRes.data?.prob_malicious !== undefined
+    xssRes && xssRes.ok && xssRes.data?.prob_malicious !== undefined
       ? xssRes.data.prob_malicious
       : 0;
 
@@ -282,7 +297,7 @@ export const analyzePayload = async ({
 
   const behaviorScore =
     behRes && behRes.ok && behRes.data?.predictions
-      ? behRes.data.predictions[0].probability ?? 0
+      ? (behRes.data.predictions[0].probability ?? 0)
       : 0;
 
   const detectorErrors = detectorStatus
@@ -341,7 +356,8 @@ export const analyzePayload = async ({
 
   const decision = aiDecision.decision;
   const shadowMode = policy.shadowMode;
-  const effectiveDecision = shadowMode && decision === "block" ? "alert" : decision;
+  const effectiveDecision =
+    shadowMode && decision === "block" ? "alert" : decision;
 
   let log;
   try {
@@ -407,14 +423,15 @@ export const analyzeRequest = async (req, res) => {
 
     const method = req.body?.method || req.method;
     const path = req.body?.path || req.originalUrl || req.path;
-    const referer = req.body?.referer || req.headers?.referer || req.headers?.referrer || "";
+    const referer =
+      req.body?.referer || req.headers?.referer || req.headers?.referrer || "";
 
     const forwardedFor = req.headers["x-forwarded-for"];
     const headerIp = Array.isArray(forwardedFor)
       ? forwardedFor[0]
       : typeof forwardedFor === "string"
-      ? forwardedFor.split(",")[0]
-      : null;
+        ? forwardedFor.split(",")[0]
+        : null;
 
     const ip = req.body?.ip || headerIp || req.ip || "unknown";
     const tenantId = req.tenantId || "default";
@@ -438,7 +455,9 @@ export const analyzeRequest = async (req, res) => {
         rps: traffic.rps,
         isWhitelisted: traffic.isWhitelisted,
         isCurrentlyBlocked: traffic.isCurrentlyBlocked,
-        ddosTriggeredAt: traffic.ddosTriggeredAt ? new Date(traffic.ddosTriggeredAt) : null,
+        ddosTriggeredAt: traffic.ddosTriggeredAt
+          ? new Date(traffic.ddosTriggeredAt)
+          : null,
         totalRequests: traffic.totalRequests,
         firstSeenAt: traffic.firstSeenAt ? new Date(traffic.firstSeenAt) : null,
         threshold: traffic.threshold,
@@ -455,17 +474,19 @@ export const analyzeRequest = async (req, res) => {
       await log.save();
     }
 
-    res.json({ 
-      log, 
+    res.json({
+      log,
       decision,
       effectiveDecision,
       ddosDetected: traffic?.isDdos,
-      ddosStatus: traffic ? {
-        rps: traffic.rps,
-        threshold: traffic.threshold,
-        isWhitelisted: traffic.isWhitelisted,
-        isCurrentlyBlocked: traffic.isCurrentlyBlocked,
-      } : null,
+      ddosStatus: traffic
+        ? {
+            rps: traffic.rps,
+            threshold: traffic.threshold,
+            isWhitelisted: traffic.isWhitelisted,
+            isCurrentlyBlocked: traffic.isCurrentlyBlocked,
+          }
+        : null,
     });
   } catch (error) {
     console.error(error.message);

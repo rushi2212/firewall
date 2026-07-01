@@ -2,6 +2,8 @@
 import express from "express";
 import cors from "cors";
 import { spawn } from "child_process";
+import path from "path";
+import { fileURLToPath } from "url";
 import decisionRoutes from "./routes/decision.routes.js";
 import logsRoutes from "./routes/logs.routes.js";
 import alertsRoutes from "./routes/alerts.routes.js";
@@ -17,15 +19,18 @@ import { ENV } from "./config/env.js";
 import { publishLogEvent } from "./utils/logStream.js";
 import { addMemoryLog } from "./utils/memoryLogStore.js";
 import { computeDdosScore, recordRequest } from "./utils/trafficMonitor.js";
-import path from "path"; // Import path module
-import { fileURLToPath } from "url"; // Needed for ES module compatibility
+import {
+  getPolicyForTenant,
+  isIpAllowedForTenant,
+  isIpBlockedForTenant,
+  isIpAllowedForTenantSync,
+  isIpBlockedForTenantSync,
+} from "./utils/policyStore.js";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 const app = express();
-app.disable("x-powered-by");
-app.use(securityHeaders);
-app.use(cors(corsOptions));
-app.use(express.json({ limit: ENV.BODY_LIMIT || "1mb" }));
 let presentationSimulationRunning = false;
 
 const getRequestIp = (req) => {
@@ -33,6 +38,7 @@ const getRequestIp = (req) => {
   if (typeof forwarded === "string" && forwarded.trim()) {
     return forwarded.split(",")[0].trim();
   }
+
   return req.ip || req.socket?.remoteAddress || "unknown";
 };
 
@@ -66,7 +72,9 @@ const createPresentationLog = (req, decision, traffic) => {
       rps: traffic?.rps || 0,
       isWhitelisted: !!traffic?.isWhitelisted,
       isCurrentlyBlocked: !!traffic?.isCurrentlyBlocked,
-      ddosTriggeredAt: traffic?.ddosTriggeredAt ? new Date(traffic.ddosTriggeredAt) : null,
+      ddosTriggeredAt: traffic?.ddosTriggeredAt
+        ? new Date(traffic.ddosTriggeredAt)
+        : null,
       totalRequests: traffic?.totalRequests || 0,
       firstSeenAt: traffic?.firstSeenAt ? new Date(traffic.firstSeenAt) : null,
       threshold: traffic?.threshold || 0,
@@ -87,12 +95,93 @@ const createPresentationLog = (req, decision, traffic) => {
   publishLogEvent(liveLog);
 
   if (Log.db.readyState === 1) {
-    Log.create(logDoc)
-      .catch((error) =>
-        console.error("Failed to create presentation log:", error.message),
-      );
+    Log.create(logDoc).catch((error) =>
+      console.error("Failed to create presentation log:", error.message),
+    );
   }
 };
+
+const presentationMiddleware = async (req, res, next) => {
+  const ip = getRequestIp(req);
+  const tenantId = req.tenantId || req.headers["x-tenant-id"] || "default";
+
+  try {
+    const isAllowed = await isIpAllowedForTenant(tenantId, ip);
+    const isBlocked = !isAllowed && (await isIpBlockedForTenant(tenantId, ip));
+
+    if (isAllowed) {
+      if (req.method === "GET") {
+        createPresentationLog(req, "allow", {
+          rps: 0,
+          windowMs: 0,
+          isDdos: false,
+          isWhitelisted: true,
+          isCurrentlyBlocked: false,
+          shouldBlock: false,
+          ddosTriggeredAt: null,
+          totalRequests: 0,
+          firstSeenAt: Date.now(),
+          threshold: 0,
+          graceRequests: 0,
+        });
+      }
+
+      return next();
+    }
+
+    if (isBlocked) {
+      createPresentationLog(req, "block", {
+        rps: 0,
+        windowMs: 0,
+        isDdos: true,
+        isWhitelisted: false,
+        isCurrentlyBlocked: true,
+        shouldBlock: true,
+        ddosTriggeredAt: Date.now(),
+        totalRequests: 0,
+        firstSeenAt: Date.now(),
+        threshold: 0,
+        graceRequests: 0,
+      });
+
+      return res.status(429).json({
+        error: "DDoS rate limit exceeded",
+        message: "Requests from this IP are blocked by policy",
+        retryAfterSeconds: Number(ENV.DDOS_BLOCK_DURATION_MS || 15000) / 1000,
+      });
+    }
+
+    const traffic = recordRequest(ip);
+
+    if (traffic.shouldBlock) {
+      createPresentationLog(req, "block", traffic);
+      return res.status(429).json({
+        error: "DDoS rate limit exceeded",
+        message: "Too many requests from the same IP in a short time window",
+        retryAfterSeconds: Math.ceil(
+          (traffic.ddosTriggeredAt +
+            Number(ENV.DDOS_BLOCK_DURATION_MS || 15000) -
+            Date.now()) /
+            1000,
+        ),
+      });
+    }
+
+    if (req.method === "GET") {
+      createPresentationLog(req, "allow", traffic);
+    }
+
+    return next();
+  } catch (error) {
+    console.error("Presentation allowlist check failed:", error.message);
+    return next(error);
+  }
+};
+
+app.disable("x-powered-by");
+app.use(securityHeaders);
+app.use(cors(corsOptions));
+app.use(express.json({ limit: ENV.BODY_LIMIT || "1mb" }));
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok", service: "ai-waf-backend" });
@@ -161,29 +250,6 @@ app.use("/api/logs", logsRoutes);
 app.use("/api/alerts", alertsRoutes);
 app.use("/api/reports", reportsRoutes);
 
-app.use("/presentation", (req, res, next) => {
-  const traffic = recordRequest(getRequestIp(req));
+app.use("/presentation", presentationMiddleware);
 
-  if (traffic.shouldBlock) {
-    createPresentationLog(req, "block", traffic);
-    return res.status(429).json({
-      error: "DDoS rate limit exceeded",
-      message: "Too many requests from the same IP in a short time window",
-      retryAfterSeconds: Math.ceil(
-        (traffic.ddosTriggeredAt + Number(ENV.DDOS_BLOCK_DURATION_MS || 15000) - Date.now()) / 1000,
-      ),
-    });
-  }
-
-  if (req.method === "GET") {
-    createPresentationLog(req, "allow", traffic);
-  }
-
-  next();
-});
-
-app.use(express.static(path.join(__dirname, "../frontend", "dist")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
-});
 export default app;

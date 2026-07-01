@@ -6,12 +6,13 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 TARGET_URL = os.getenv("DDOS_TARGET_URL", "http://localhost:5000/presentation")
-ATTACKER_IP = os.getenv("DDOS_ATTACKER_IP", "10.0.0.3")
+ATTACKER_IP = os.getenv("DDOS_ATTACKER_IP", "192.168.1.113")
 TOTAL_REQUESTS = int(os.getenv("DDOS_TOTAL_REQUESTS", "42"))
 BURST_WORKERS = int(os.getenv("DDOS_BURST_WORKERS", "12"))
 WARMUP_REQUESTS = int(os.getenv("DDOS_WARMUP_REQUESTS", "6"))
 COOLDOWN_REQUESTS = int(os.getenv("DDOS_COOLDOWN_REQUESTS", "6"))
 COOLDOWN_WAIT_SECONDS = float(os.getenv("DDOS_COOLDOWN_WAIT_SECONDS", "16"))
+ALLOWLIST_MODE = os.getenv("DDOS_ALLOWLIST_MODE", "false").lower() == "true"
 
 headers = {
     "Content-Type": "application/json",
@@ -47,6 +48,11 @@ def run_burst(count, phase):
 
 
 print(f"Targeting {TARGET_URL} from {ATTACKER_IP}")
+if ALLOWLIST_MODE:
+    print(
+        "Allowlist validation mode enabled: if this IP is present in the presentation allow list, "
+        "all requests should stay allowed."
+    )
 print("Phase 1: warmup traffic")
 run_sequential(WARMUP_REQUESTS, "warmup")
 
@@ -54,10 +60,18 @@ burst_requests = max(0, TOTAL_REQUESTS - WARMUP_REQUESTS - COOLDOWN_REQUESTS)
 print("\nPhase 2: sustained burst")
 run_burst(burst_requests, "burst")
 
-print(f"\nWaiting {COOLDOWN_WAIT_SECONDS:g}s for the demo block window to reset")
+print(
+    f"\nWaiting {COOLDOWN_WAIT_SECONDS:g}s for the demo block window to reset")
 time.sleep(COOLDOWN_WAIT_SECONDS)
 
 print("\nPhase 3: cooldown probe")
 run_sequential(COOLDOWN_REQUESTS, "cooldown", delay_range=(0.6, 1.2))
 
-print("\nDone. The warmup should pass, the burst should trip the limiter, and the cooldown should show recovery behavior after the window resets.")
+if ALLOWLIST_MODE:
+    print(
+        "\nDone. This run is validating allowlisted presentation traffic, so every request from this IP should remain allowed."
+    )
+else:
+    print(
+        "\nDone. The warmup should pass, the burst should trip the limiter, and the cooldown should show recovery behavior after the window resets."
+    )

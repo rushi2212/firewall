@@ -38,33 +38,49 @@ const normalizeDecision = (value = {}) => {
   }
 
   const reasons = Array.isArray(value.reasons)
-    ? value.reasons.map((reason) => String(reason)).filter(Boolean).slice(0, 5)
+    ? value.reasons
+        .map((reason) => String(reason))
+        .filter(Boolean)
+        .slice(0, 5)
     : [String(value.reason || "Groq reviewed the request context.")];
-  const analysis = value.analysis && typeof value.analysis === "object" ? value.analysis : {};
+  const analysis =
+    value.analysis && typeof value.analysis === "object" ? value.analysis : {};
   const toStringList = (items) =>
-    Array.isArray(items) ? items.map((item) => String(item)).filter(Boolean).slice(0, 6) : [];
+    Array.isArray(items)
+      ? items
+          .map((item) => String(item))
+          .filter(Boolean)
+          .slice(0, 6)
+      : [];
 
   return {
     decision,
     confidence: Math.round(clamp01(value.confidence) * 100) / 100,
-    primarySignal: String(value.primarySignal || value.primary_signal || "groq"),
+    primarySignal: String(
+      value.primarySignal || value.primary_signal || "groq",
+    ),
     reasons,
     analysis: {
       summary: String(analysis.summary || value.summary || reasons[0] || ""),
       evidence: toStringList(analysis.evidence),
       riskFactors: toStringList(analysis.riskFactors || analysis.risk_factors),
-      benignFactors: toStringList(analysis.benignFactors || analysis.benign_factors),
+      benignFactors: toStringList(
+        analysis.benignFactors || analysis.benign_factors,
+      ),
       scoreInterpretation: String(
-        analysis.scoreInterpretation || analysis.score_interpretation || ""
+        analysis.scoreInterpretation || analysis.score_interpretation || "",
       ),
       payloadInterpretation: String(
-        analysis.payloadInterpretation || analysis.payload_interpretation || ""
+        analysis.payloadInterpretation || analysis.payload_interpretation || "",
       ),
       recommendedAction: String(
-        analysis.recommendedAction || analysis.recommended_action || ""
+        analysis.recommendedAction || analysis.recommended_action || "",
       ),
     },
-    override: value.override && typeof value.override === "object" ? value.override : null,
+    override:
+      value.override && typeof value.override === "object"
+        ? value.override
+        : null,
     source: "groq",
   };
 };
@@ -124,7 +140,7 @@ const strongestScore = (scores = {}) =>
       const score = Number(value) || 0;
       return score > best.score ? { name, score } : best;
     },
-    { name: "none", score: 0 }
+    { name: "none", score: 0 },
   );
 
 const buildLocalFallbackDecision = ({
@@ -139,20 +155,24 @@ const buildLocalFallbackDecision = ({
   const alertThreshold = Number(policy.alertThreshold ?? 0.5);
   const score = Number(threatScore || scores.rules || scores.payload || 0);
   const topSignal = strongestScore(scores);
-  const matchedRules = ruleMatches.map((match) => `${match.category}:${match.id}`);
+  const matchedRules = ruleMatches.map(
+    (match) => `${match.category}:${match.id}`,
+  );
   const payloadPreview = String(payload || "").slice(0, 160);
 
   if (score >= blockThreshold) {
     return {
       decision: "block",
       primarySignal: "local_fallback_high_threat",
-      reasons: ["Local fallback blocked the request based on the threat score."],
+      reasons: [
+        "Local fallback blocked the request based on the threat score.",
+      ],
       analysis: {
         summary:
           "Groq was unavailable, so the local fallback used the supplied detector scores. The request exceeded the block threshold and should be treated as malicious until reviewed.",
         evidence: [
           `Threat score ${Math.round(score * 100)}% met block threshold ${Math.round(
-            blockThreshold * 100
+            blockThreshold * 100,
           )}%.`,
           `Strongest signal was ${topSignal.name} at ${Math.round(topSignal.score * 100)}%.`,
           ...matchedRules.slice(0, 3),
@@ -160,11 +180,15 @@ const buildLocalFallbackDecision = ({
         riskFactors: matchedRules.length
           ? matchedRules
           : ["High combined detector score without a successful AI review."],
-        benignFactors: ["Groq did not review the request, so context may be incomplete."],
+        benignFactors: [
+          "Groq did not review the request, so context may be incomplete.",
+        ],
         scoreInterpretation:
           "The fallback compares the combined threat score against configured policy thresholds.",
-        payloadInterpretation: payloadPreview || "No payload text was available.",
-        recommendedAction: "Block the request and review the matched signals in the log.",
+        payloadInterpretation:
+          payloadPreview || "No payload text was available.",
+        recommendedAction:
+          "Block the request and review the matched signals in the log.",
       },
     };
   }
@@ -173,13 +197,15 @@ const buildLocalFallbackDecision = ({
     return {
       decision: "alert",
       primarySignal: "local_fallback_medium_threat",
-      reasons: ["Local fallback flagged the request for review based on the threat score."],
+      reasons: [
+        "Local fallback flagged the request for review based on the threat score.",
+      ],
       analysis: {
         summary:
           "Groq was unavailable, so the local fallback used the supplied detector scores. The request crossed the alert threshold but did not reach the block threshold.",
         evidence: [
           `Threat score ${Math.round(score * 100)}% met alert threshold ${Math.round(
-            alertThreshold * 100
+            alertThreshold * 100,
           )}%.`,
           `Strongest signal was ${topSignal.name} at ${Math.round(topSignal.score * 100)}%.`,
           ...matchedRules.slice(0, 3),
@@ -187,11 +213,15 @@ const buildLocalFallbackDecision = ({
         riskFactors: matchedRules.length
           ? matchedRules
           : ["Medium combined detector score without a successful AI review."],
-        benignFactors: ["The score did not reach the configured block threshold."],
+        benignFactors: [
+          "The score did not reach the configured block threshold.",
+        ],
         scoreInterpretation:
           "The fallback compares the combined threat score against configured policy thresholds.",
-        payloadInterpretation: payloadPreview || "No payload text was available.",
-        recommendedAction: "Allow in shadow mode or alert an operator for review.",
+        payloadInterpretation:
+          payloadPreview || "No payload text was available.",
+        recommendedAction:
+          "Allow in shadow mode or alert an operator for review.",
       },
     };
   }
@@ -199,13 +229,15 @@ const buildLocalFallbackDecision = ({
   return {
     decision: "allow",
     primarySignal: "local_fallback_low_threat",
-    reasons: ["Local fallback allowed the request because the threat score stayed low."],
+    reasons: [
+      "Local fallback allowed the request because the threat score stayed low.",
+    ],
     analysis: {
       summary:
         "Groq was unavailable, so the local fallback used the supplied detector scores. The request stayed below the alert threshold.",
       evidence: [
         `Threat score ${Math.round(score * 100)}% stayed below alert threshold ${Math.round(
-          alertThreshold * 100
+          alertThreshold * 100,
         )}%.`,
         `Strongest signal was ${topSignal.name} at ${Math.round(topSignal.score * 100)}%.`,
       ],
@@ -216,7 +248,8 @@ const buildLocalFallbackDecision = ({
       scoreInterpretation:
         "The fallback compares the combined threat score against configured policy thresholds.",
       payloadInterpretation: payloadPreview || "No payload text was available.",
-      recommendedAction: "Allow the request and keep the log for audit history.",
+      recommendedAction:
+        "Allow the request and keep the log for audit history.",
     },
   };
 };
@@ -233,7 +266,8 @@ const callGroq = async (prompt) => {
       messages: [
         {
           role: "system",
-          content: "You are a strict JSON API for web application firewall decisions.",
+          content:
+            "You are a strict JSON API for web application firewall decisions.",
         },
         { role: "user", content: prompt },
       ],
@@ -246,7 +280,7 @@ const callGroq = async (prompt) => {
         Authorization: `Bearer ${ENV.GROQ_API_KEY}`,
         "Content-Type": "application/json",
       },
-    }
+    },
   );
 
   const text = response.data?.choices?.[0]?.message?.content;
@@ -269,6 +303,7 @@ export const makeAiDecision = async ({
   request = {},
   groqDecision = null,
 }) => {
+  const scoreSnapshot = Array.isArray(scores) ? [...scores] : { ...scores };
   const prompt = buildGroqPrompt({
     payload,
     ip,
@@ -285,13 +320,15 @@ export const makeAiDecision = async ({
   });
 
   try {
-    const rawDecision = groqDecision ? await groqDecision(prompt) : await callGroq(prompt);
+    const rawDecision = groqDecision
+      ? await groqDecision(prompt)
+      : await callGroq(prompt);
     return {
       ...normalizeDecision(rawDecision),
       promptContext: {
         model: groqModel,
         ip,
-        scores,
+        scores: scoreSnapshot,
         threatScore,
       },
     };
@@ -315,7 +352,7 @@ export const makeAiDecision = async ({
       promptContext: {
         model: groqModel,
         ip,
-        scores,
+        scores: scoreSnapshot,
         threatScore,
       },
     };

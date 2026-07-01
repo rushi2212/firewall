@@ -2,6 +2,10 @@ import { ENV } from "../config/env.js";
 import { Log } from "../models/Log.js";
 import { recordRequest } from "../utils/trafficMonitor.js";
 import { publishLogEvent } from "../utils/logStream.js";
+import {
+  isIpAllowedForTenantSync,
+  isIpBlockedForTenantSync,
+} from "../utils/policyStore.js";
 
 const buckets = new Map();
 
@@ -31,9 +35,38 @@ export const createRateLimiter = ({
 
     const tenant = req.tenantId || req.headers["x-tenant-id"] || "anonymous";
     const route = req.baseUrl || req.path || "root";
-    const identity = keyGenerator ? keyGenerator(req) : `${tenant}:${clientIp(req)}:${route}`;
+    const ip = clientIp(req);
+    const identity = keyGenerator
+      ? keyGenerator(req)
+      : `${tenant}:${ip}:${route}`;
     const key = `${keyPrefix}:${identity}`;
     const current = buckets.get(key) || { count: 0, resetAt: now + windowMs };
+
+    const isAllowed = isIpAllowedForTenantSync(tenant, ip);
+    const isBlocked = !isAllowed && isIpBlockedForTenantSync(tenant, ip);
+
+    if (isAllowed) {
+      res.setHeader("RateLimit-Limit", String(max));
+      res.setHeader("RateLimit-Remaining", String(max));
+      res.setHeader(
+        "RateLimit-Reset",
+        String(Math.ceil((now + windowMs) / 1000)),
+      );
+      return next();
+    }
+
+    if (isBlocked) {
+      res.setHeader("RateLimit-Limit", String(max));
+      res.setHeader("RateLimit-Remaining", "0");
+      res.setHeader(
+        "RateLimit-Reset",
+        String(Math.ceil((now + windowMs) / 1000)),
+      );
+      return res.status(429).json({
+        error: "Rate limit exceeded",
+        retryAfterSeconds: Math.ceil(windowMs / 1000),
+      });
+    }
 
     if (current.resetAt <= now) {
       current.count = 0;
@@ -49,10 +82,9 @@ export const createRateLimiter = ({
     res.setHeader("RateLimit-Reset", String(Math.ceil(current.resetAt / 1000)));
 
     if (current.count > max) {
-      // Log the blocked request asynchronously with DDoS details
       try {
-        const ip = clientIp(req);
-        const tenantId = req.tenantId || req.headers["x-tenant-id"] || "default";
+        const tenantId =
+          req.tenantId || req.headers["x-tenant-id"] || "default";
         const traffic = recordRequest(ip);
 
         const logDoc = {
@@ -73,9 +105,13 @@ export const createRateLimiter = ({
             rps: traffic.rps,
             isWhitelisted: traffic.isWhitelisted,
             isCurrentlyBlocked: traffic.isCurrentlyBlocked,
-            ddosTriggeredAt: traffic.ddosTriggeredAt ? new Date(traffic.ddosTriggeredAt) : null,
+            ddosTriggeredAt: traffic.ddosTriggeredAt
+              ? new Date(traffic.ddosTriggeredAt)
+              : null,
             totalRequests: traffic.totalRequests,
-            firstSeenAt: traffic.firstSeenAt ? new Date(traffic.firstSeenAt) : null,
+            firstSeenAt: traffic.firstSeenAt
+              ? new Date(traffic.firstSeenAt)
+              : null,
             threshold: traffic.threshold,
           },
           requestDetails: {
@@ -89,10 +125,11 @@ export const createRateLimiter = ({
           },
         };
 
-        // Create log without awaiting to avoid delaying response
         Log.create(logDoc)
           .then((created) => publishLogEvent(created))
-          .catch((e) => console.error("Failed to create rate-limit log:", e.message));
+          .catch((e) =>
+            console.error("Failed to create rate-limit log:", e.message),
+          );
       } catch (e) {
         console.error("Error while logging rate limit event:", e.message);
       }
